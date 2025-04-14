@@ -26,6 +26,8 @@ ax_accuracy_gap = 5
 model_name = "pubmed_bert_model"
 saved_once = False
 
+print()
+print("Collecting data ...")
 diseases = {
     "Tuberculosis": '"tuberculosis" AND (1950:2024[DP])',
     "Cholera": '"cholera" AND (1950:2024[DP])',
@@ -49,6 +51,9 @@ for label, (disease, query) in enumerate(diseases.items()):
     df["Disease"] = disease
     dfs.append(df)
 
+print()
+print("Merging all disease data, shuffling, and removing incomplete entries...")
+print()
 combined_df = pd.concat(dfs, ignore_index=True)
 combined_df = combined_df.sample(frac=1, random_state=42).reset_index(drop=True)
 combined_df.replace(["", "None", "null"], np.nan, inplace=True)
@@ -57,10 +62,8 @@ combined_df = combined_df.dropna()
 combined_df = combined_df.reset_index(drop=True)
 
 print(combined_df.info())
-print()
 print(combined_df['Label'].value_counts())
 print()
-
 X_train, X_temp, y_train, y_temp = train_test_split(combined_df["Cleaned_Abstract"].values, combined_df["Label"].values, test_size=0.3, random_state=42)
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
@@ -83,9 +86,8 @@ bert_dim = 768
 hidden_dim = 256
 model = PubMedBERT_GRU_Attention(bert_dim, hidden_dim, num_classes=9, num_layers=2, dropout_prob=0.6)
 
-print()
+print("Initializing model ...")
 print(model)
-print()
 print(f"{count_parameters(model)} model parameters")
 print()
 
@@ -95,6 +97,8 @@ model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 loss_function = torch.nn.CrossEntropyLoss()
 
+print("Beginning training and evaluation per epoch ...")
+print()
 for epoch in range(num_epochs):
     start_time = time.time()
     train_loss, train_acc = train_model(model, combined_loader, optimizer, loss_function, device)
