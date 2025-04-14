@@ -50,7 +50,7 @@ def train_model(model, dataloader, optimizer, criterion, device):
     total_correct = 0
     total_samples = 0
 
-    for batch in tqdm(dataloader, desc="Evaluating"):
+    for batch in tqdm(dataloader, desc="Training"):
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
         labels = batch['labels'].to(device)
