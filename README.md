@@ -1,5 +1,5 @@
 ---
-# Classification of Biomedical Texts with Deep Learning: LSTM, GRU, and Self-Attention
+# Classification of Biomedical Texts with Deep Learning: LSTM, GRU, and Soft-Attention
 
 ---
 
