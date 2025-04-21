@@ -45,6 +45,7 @@ def main():
         "Lupus": '"systemic lupus erythematosus" AND (1950:2024[DP])',
         "Cystic Fibrosis": '"cystic fibrosis" AND (1950:2024[DP])'
     }
+    
     num_classes = len(diseases)
     dfs = []
     for label, (disease, query) in enumerate(diseases.items()):
