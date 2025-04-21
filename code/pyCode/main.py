@@ -7,6 +7,7 @@ from transformers import AutoTokenizer, AutoModel
 
 from src.utils import *
 from torch.utils.data import DataLoader, ConcatDataset
+from sklearn.utils.class_weight import compute_class_weight
 
 from src.model import PubMedBERT_GRU_Attention
 from sklearn.model_selection import train_test_split
