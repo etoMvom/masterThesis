@@ -7,6 +7,7 @@ from transformers import AutoTokenizer, AutoModel
 
 from src.utils import *
 from torch.utils.data import DataLoader, ConcatDataset
+
 from src.model import PubMedBERT_GRU_Attention
 from sklearn.model_selection import train_test_split
 from src.training import train_model, epoch_time, count_parameters
@@ -106,7 +107,9 @@ def main():
     model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    loss_function = torch.nn.CrossEntropyLoss()
+    class_weights = compute_class_weight('balanced', classes=np.unique(y_train_tensor.cpu().numpy()), y=y_train_tensor.cpu().numpy())
+    class_weights_tensor = torch.tensor(class_weights, dtype=torch.float).to(device)
+    loss_function = nn.CrossEntropyLoss(weight=class_weights_tensor)
 
     print("------------------------Beginning training and evaluation per epoch ...------------------------")
     print()
