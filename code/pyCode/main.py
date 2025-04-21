@@ -45,7 +45,7 @@ def main():
         "Lupus": '"systemic lupus erythematosus" AND (1950:2024[DP])',
         "Cystic Fibrosis": '"cystic fibrosis" AND (1950:2024[DP])'
     }
-    
+
     num_classes = len(diseases)
     dfs = []
     for label, (disease, query) in enumerate(diseases.items()):
@@ -109,7 +109,13 @@ def main():
     model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    class_weights = compute_class_weight('balanced', classes= num_classes)
+
+    all_labels = np.concatenate([y_train, y_val])
+    class_weights = compute_class_weight(
+        class_weight='balanced',
+        classes=np.unique(all_labels),
+        y=all_labels
+    )
     class_weights_tensor = torch.tensor(class_weights, dtype=torch.float).to(device)
     loss_function = nn.CrossEntropyLoss(weight=class_weights_tensor)
 
