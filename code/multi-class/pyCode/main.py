@@ -7,7 +7,6 @@ from transformers import AutoTokenizer, AutoModel
 
 from src.utils import *
 from torch.utils.data import DataLoader, ConcatDataset
-from sklearn.utils.class_weight import compute_class_weight
 
 from src.model import PubMedBERT_GRU_Attention
 from sklearn.model_selection import train_test_split
@@ -109,15 +108,7 @@ def main():
     model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-
-    all_labels = np.concatenate([y_train, y_val])
-    class_weights = compute_class_weight(
-        class_weight='balanced',
-        classes=np.unique(all_labels),
-        y=all_labels
-    )
-    class_weights_tensor = torch.tensor(class_weights, dtype=torch.float).to(device)
-    loss_function = nn.CrossEntropyLoss(weight=class_weights_tensor)
+    loss_function = nn.CrossEntropyLoss()
 
     print("------------------------Beginning training and evaluation per epoch ...------------------------")
     print()
