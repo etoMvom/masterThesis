@@ -67,7 +67,7 @@ def preprocess_text(text):
     words = [lemmatizer.lemmatize(word) for word in words if word not in stop_words]
     return " ".join(words)
 
-class PubMedBERTBinaryDataset(Dataset):
+class PubMedBERTDataset(Dataset):
     """
     Dataset class for multi-class classification using PubMedBERT embeddings.
 
