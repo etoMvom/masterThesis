@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, ConcatDataset
 from src.model import PubMedBERT_GRU_Attention
 from sklearn.model_selection import train_test_split
 from src.training import train_model, epoch_time, count_parameters
-from src.TextDataset import PubMedBERTBinaryDataset, search_pubmed, fetch_abstracts, preprocess_text
+from src.TextDataset import PubMedBERTDataset, search_pubmed, fetch_abstracts, preprocess_text
 
 
 def main():
@@ -84,9 +84,9 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(pubmedbert_model_name)
     pubmedbert = AutoModel.from_pretrained(pubmedbert_model_name)
 
-    train_dataset = PubMedBERTBinaryDataset(X_train.tolist(), y_train, tokenizer)
-    val_dataset = PubMedBERTBinaryDataset(X_val.tolist(), y_val, tokenizer)
-    test_dataset = PubMedBERTBinaryDataset(X_test.tolist(), y_test, tokenizer)
+    train_dataset = PubMedBERTDataset(X_train.tolist(), y_train, tokenizer)
+    val_dataset = PubMedBERTDataset(X_val.tolist(), y_val, tokenizer)
+    test_dataset = PubMedBERTDataset(X_test.tolist(), y_test, tokenizer)
 
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
