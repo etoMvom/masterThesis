@@ -23,7 +23,7 @@ This project explores the use of deep learning for classifying biomedical abstra
   Assessing how performance shifts across models when using raw input, **GloVe and Fasttext embeddings**, and **BioBert and PubMedBERT**, which is specifically trained on biomedical literature.
 
 * **Addressing Class Imbalance**
-  Investigating whether class imbalance negatively impacts performance — particularly in multiclass settings — and measuring the effectiveness of resampling techniques such as **SMOTE**, **Borderline-SMOTE**, and **ADASYN**.
+  Investigating whether class imbalance negatively impacts performance — particularly in multiclass settings — and measuring the effectiveness of resampling techniques such as **SMOTE**, **Borderline-SMOTE**, and **Weight class**.
 
 * **Generalizability & Few-Shot Potential**
   Exploring whether these models can generalize to underrepresented diseases, and laying the foundation for future few-shot learning strategies in biomedical text mining.
