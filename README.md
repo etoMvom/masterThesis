@@ -1,5 +1,3 @@
-Absolutely — here's a refined, **well-structured and professionally written README**, formatted for clarity and presentation, *without relying on numbered lists*, and ready for direct use on GitHub:
-
 ---
 
 # 🧠 Biomedical Text Classification with Deep Learning
