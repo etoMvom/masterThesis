@@ -119,11 +119,3 @@ All experiments were tracked using **Weights & Biases (wandb.ai)**, including:
 * Few-shot learning remains a promising future direction to improve classification for rare diseases.
 
 ---
-
-## 🧠 Future Work
-
-* Expand to transformer-only architectures (e.g., BioBERT, SciBERT)
-* Implement contrastive learning or metric learning for low-resource classes
-* Investigate zero-shot and few-shot setups using domain-adapted foundation models
-
----
