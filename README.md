@@ -68,7 +68,7 @@ Three core architectures were implemented:
 * **LSTM**: Captures long-term sequential dependencies
 * **GRU**: More efficient alternative to LSTM, with fewer parameters
 * **LSTM/GRU + Bahdanau Attention**: Dynamically focuses on the most relevant parts of the sequence, enhancing interpretability and accuracy, especially on long texts
-
+(hybrid models CNN-GRU and CNN-LSTM used on multi-class dataset)
 Each model is trained under different embedding conditions, enabling fair comparison across various levels of linguistic representation.
 
 ---
@@ -78,8 +78,8 @@ Each model is trained under different embedding conditions, enabling fair compar
 To represent biomedical language effectively, we tested:
 
 * **No Embedding**: Raw tokenized input (baseline)
-* **GloVe (300d)**: General-purpose static embeddings
-* **PubMedBERT**: Transformer-based contextual embeddings trained on biomedical corpora
+* **GloVe and Fasttext (300d)**: General-purpose static embeddings
+* **PubMedBERT and BioBert**: Transformer-based contextual embeddings trained on biomedical corpora
 
 These embeddings significantly affect model behavior, especially in nuanced disease classification.
 
@@ -92,7 +92,7 @@ In the **multiclass setting**, class imbalance was addressed with:
 * **Random Oversampling**
 * **Random Undersampling**
 * **SMOTE / Borderline-SMOTE**
-* **ADASYN**
+* **Weight Class**
 
 Results show substantial gains in **F1-score**, **balanced accuracy**, and **recall** for minority classes after resampling.
 
