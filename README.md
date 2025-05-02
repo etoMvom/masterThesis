@@ -1,6 +1,8 @@
+
+
 ---
 
-#  Biomedical Text Classification with Deep Learning
+# 🧠 Biomedical Text Classification with Deep Learning
 
 **LSTM • GRU • Bahdanau Attention • GloVe • PubMedBERT • Resampling**
 
