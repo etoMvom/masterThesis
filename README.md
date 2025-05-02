@@ -114,7 +114,7 @@ All experiments were tracked using **Weights & Biases (wandb.ai)**, including:
 ## 🔍 Key Insights
 
 * Attention mechanisms significantly boost interpretability and performance on longer abstracts.
-* PubMedBERT consistently outperforms static embeddings like GloVe in biomedical contexts.
+* PubMedBERT aand BioBert consistently outperforms static embeddings like GloVe in biomedical contexts.
 * Resampling is crucial in the multiclass setting but has negligible impact in well-performing binary scenarios.
 * Few-shot learning remains a promising future direction to improve classification for rare diseases.
 
