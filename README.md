@@ -20,7 +20,7 @@ This project explores the use of deep learning for classifying biomedical abstra
   Evaluating how different neural architectures (LSTM, GRU, attention) compare in terms of training speed, inference time, parameter complexity, and predictive performance.
 
 * **Impact of Embedding Representations**
-  Assessing how performance shifts across models when using raw input, **GloVe embeddings**, and **PubMedBERT**, which is specifically trained on biomedical literature.
+  Assessing how performance shifts across models when using raw input, **GloVe and Fasttext embeddings**, and **BioBert and PubMedBERT**, which is specifically trained on biomedical literature.
 
 * **Addressing Class Imbalance**
   Investigating whether class imbalance negatively impacts performance — particularly in multiclass settings — and measuring the effectiveness of resampling techniques such as **SMOTE**, **Borderline-SMOTE**, and **ADASYN**.
