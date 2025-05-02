@@ -4,7 +4,7 @@
 
 # 🧠 Biomedical Text Classification with Deep Learning
 
-**LSTM • GRU • Bahdanau Attention • GloVe • • Fasttext • PubMedBERT • BioBERT • Resampling(SMOTE - Bordrline-SMOTE - Weight Class)**
+**LSTM • GRU • Bahdanau Attention • GloVe • Fasttext • PubMedBERT • BioBERT • Resampling(SMOTE - Bordrline-SMOTE - Weight Class)**
 
 ---
 
