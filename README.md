@@ -2,7 +2,7 @@
 
 ---
 
-#  Biomedical Text Classification : GRU, LSTM and Bahdanau attention
+#  Biomedical Text Classification Using LSTM, GRU, and Bahdanau Attention
 ---
 
 ## 📘 Overview
