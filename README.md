@@ -36,10 +36,18 @@ Biomedical abstracts were extracted from _PubMed_, covering a wide range of lite
 
 ## 🧠 **Model Architectures**
 
-Three core architectures were implemented:
+#### Binary Classification Task
 
 - _LSTM_: Captures long-term sequential dependencies
 - _GRU_: More efficient alternative to LSTM, with fewer parameters
+- _GRU + Bahdanau Attention_: Dynamically focuses on the most relevant parts of the sequence using Bahdanau attention, enhancing interpretability and accuracy
+
+#### Multiclass Classification Task
+
+- _LSTM_: Captures long-term sequential dependencies
+- _GRU_: More efficient alternative to LSTM, with fewer parameters
+- _CNN + LSTM_: Combines convolutional layers with LSTM to capture both local and long-term dependencies
+- _CNN + GRU_: Combines convolutional layers with GRU to capture both local and sequential dependencies
 - _GRU + Bahdanau Attention_: Dynamically focuses on the most relevant parts of the sequence using Bahdanau attention, enhancing interpretability and accuracy
 
 ## 🧬 **Embedding Strategies**
