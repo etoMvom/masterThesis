@@ -6,8 +6,9 @@
 ---
 
 ## 📘 Overview
+This project explores the use of deep learning for classifying biomedical abstracts, primarily from PubMed, into disease-related categories. Given the domain-specific complexity of biomedical language and the fact that abstracts often contain long sentences, we rely on abstracts as the primary source for achieving the classification task. To effectively capture the nuances and dependencies within these lengthy sentences, we leverage deep learning architectures such as **LSTM**, **GRU**, and *attention mechanisms* (specifically **Bahdanau attention**), which are well-suited for handling sequential data and emphasizing relevant information. These models enable us to better understand the complex relationships within biomedical texts, ultimately enhancing the accuracy of our classification system.
+The study emphasizes both **binary and multiclass classification tasks**, with a focus on the role of **pretrained embeddings** and **resampling techniques** to address class imbalance
 
-This project explores the use of deep learning for classifying biomedical abstracts, primarily from PubMed, into disease-related categories. Given the domain-specific complexity of biomedical language, models such as **LSTM**, **GRU**, and **attention mechanism** (soft-attention) is employed to extract meaningful temporal and semantic information from scientific texts. The study emphasizes both **binary and multiclass classification tasks**, with a focus on the role of **pretrained embeddings** and **resampling techniques** to address class imbalance.
 
 ---
 
