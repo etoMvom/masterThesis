@@ -26,10 +26,9 @@ Binary Classification Task
 Multiclass Classification Task
 
 - _Labels_: 9 disease classes (e.g., tuberculosis, cholera, lupus, cystic fibrosis)
-- _Size_: 42,879 abstracts
-- _Challenge_: Highly imbalanced distribution of classes
-- _Objective_: Classify each abstract into the correct disease group;
--  _Source_: PubMed abstracts from 1950–2024
+- _Size_: 42,879 abstracts (imbalance)
+-  _Source_: PubMed abstracts from 1950–2024;
+- _Objective_: Evaluate model behavior in a multi-class scenario with class imbalance.
 
 ## 💾 **Data Collection & Curation**
 
