@@ -5,7 +5,7 @@
 ## 📘 **Overview**
 
 
-This project explores the application of deep learning techniques for classifying biomedical abstracts into disease-related categories. Given the complexity of biomedical language and the presence of long sentences in abstracts, we utilize deep learning architectures such as **LSTM**, **GRU**, and **GRU + Bahdanau attention** to effectively capture nuances and dependencies within these texts.
+This project explores the application of deep learning techniques for classifying biomedical abstracts into disease-related categories. Given the complexity of biomedical language and the presence of long sentences in abstracts, we utilize deep learning architectures such as **LSTM**, **GRU**, and bidirectional **GRU + Bahdanau attention** to effectively capture nuances and dependencies within these texts.
 
 ## 🧪 **Motivation & Core Research Themes**
 
