@@ -12,7 +12,7 @@ This project explores the application of deep learning techniques for classifyin
 - _Model Effectiveness & Efficiency_: Evaluating the performance of different neural architectures (LSTM, GRU, GRU + Bahdanau attention) in terms of training speed, inference time, parameter complexity, and predictive performance.
 - _Impact of Embedding Representations_: Assessing the impact of various embedding strategies (raw input, GloVe, Fasttext, BioBert, PubMedBERT) on model performance.
 - _Addressing Class Imbalance_: Investigating the effectiveness of techniques to address class imbalance.
-- _Generalizability & Few-Shot Potential_: Exploring the potential of these models to generalize to underrepresented diseases and laying the foundation for future few-shot learning strategies.
+- _Generalizability & Few-Shot Potential_: Generalizability & Few-Shot Learning: Applying few-shot learning to top-performing models to evaluate their ability to generalize to underrepresented disease categories and improve rare disease classification.
 
 ## 📚 **Dataset**
 
@@ -73,4 +73,4 @@ All experiments were tracked using _Weights & Biases_, including live training c
 - The GRU + Bahdanau attention architecture effectively captures nuances and dependencies in biomedical texts.
 - PubMedBERT and BioBert consistently outperform static embeddings like GloVe in biomedical contexts.
 - Addressing class imbalance is crucial in both binary and multiclass settings.
-- Few-shot learning remains a promising future direction to improve classification for rare diseases.
+- Few-shot learning applied to top-performing models demonstrates strong potential for classifying rare diseases, even with limited labeled data.
