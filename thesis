@@ -1,0 +1,395 @@
+\documentclass[12pt]{report}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{titlesec}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+\usepackage[acronym]{glossaries}
+
+\usepackage{url}
+\usepackage[a4paper, left=2.5cm, right=2.5cm, top=2cm, bottom=2cm]{geometry}
+
+\makeglossaries
+
+\newacronym{tln}{TLN}{Traitement du Langage Naturel}
+\newacronym{ia}{IA}{Intelligence Artificielle}
+\newacronym{rnn}{RNN}{Réseau de Neurones Récurrents}
+\newacronym{lstm}{LSTM}{Long Short-Term Memory}
+\newacronym{gru}{GRU}{Gated Recurrent Unit}
+\newacronym{pubmedbert}{PubMedBERT}{PubMed BERT, un modèle de langage préentraîné spécifique au domaine biomédical}
+\newacronym{biobert}{BioBERT}{BioBERT, une variante de BERT pour le domaine biomédical}
+\newacronym{smote}{SMOTE}{Technique de suréchantillonnage de la minorité synthétique}
+\newacronym{bert}{BERT}{Représentations encodées bidirectionnelles des transformeurs}
+\newacronym{glove}{GloVe}{Vecteurs globaux pour la représentation de mots}
+
+\usepackage[T1]{fontenc}
+
+\begin{document}
+\sloppy
+
+\begin{titlepage}
+    \begin{center}
+        \includegraphics[width=7cm]{images/uliege.jpg} \\[1cm]
+        
+        {\Huge \textsc{Université de Liège}} \\[0.5cm]
+        {\Large Faculté des Sciences Appliquées} \\[2.5cm]
+        
+        \rule{\linewidth}{0.8mm} \\[0.4cm]
+        
+        {\LARGE \textbf{Classification de textes biomédicaux à l’aide de  LSTM, GRU et de l’attention de \\ Bahdanau}} \\[0.4cm]
+        
+        \rule{\linewidth}{0.8mm} \\[1cm]
+        
+        {\large 
+         Mémoire présenté en vue de l’obtention du diplôme de \\[0.3cm]
+        \textit{Master en science des données et ingénierie} \\[2cm]
+        }
+    \end{center}
+    
+    \vspace{-0.4cm}
+    
+    \begin{center}
+        \begin{minipage}{0.45\textwidth}
+            \flushleft
+            \textit{Auteur :} \\[0.2cm]
+            W\MakeLowercase{ilfried} \textsc{Mvomo Eto}
+        \end{minipage}
+        \begin{minipage}{0.45\textwidth}
+            \flushright
+            \textit{Promoteur :} \\[0.2cm]
+            Professeur \textsc{Ashwin Ittoo}
+        \end{minipage}
+    \end{center}
+
+    \vspace{4cm}
+    \begin{center}
+        {\small Année académique 2024 -- 2025}
+    \end{center}
+    
+    \vfill
+\end{titlepage}
+
+\newpage
+\vspace*{\stretch{0.2}}
+\scalebox{2.5}{\textbf{Abstract}} 
+\vspace{1cm}
+
+La classification de textes biomédicaux constitue une tâche complexe en raison de la terminologie spécialisée et des structures linguistiques élaborées propres à la littérature scientifique. Ce mémoire évalue l’efficacité de modèles d’apprentissage profond — \gls{lstm}, \gls{gru} et GRU bidirectionnel avec mécanisme d’attention de Bahdanau — pour classifier des résumés biomédicaux selon des catégories de maladies. À l’aide de jeux de données extraits de PubMed, des expériences sont menées pour des tâches de classification binaire (paludisme vs non-paludisme) et multiclasse (9 maladies).
+
+Nous commençons par entraîner des modèles avec des plongements lexicaux (embeddings) appris à partir de zéro afin d’établir une base de référence. Ensuite, nous examinons l’impact d’approches plus avancées, incluant des vecteurs statiques préentraînés (\gls{glove}, FastText) et des modèles de type \textit{transformer} spécialisés — notamment \gls{bert} et PubMedBERT. Bien que ces représentations préentraînées améliorent significativement la précision et la compréhension contextuelle, en particulier lorsqu’elles sont combinées à des mécanismes d’attention, elles accroissent également la complexité et le temps d’apprentissage. Ce travail analyse ainsi le compromis entre performance et coût computationnel. Des techniques telles que \gls{smote}, Borderline-SMOTE et les fonctions de perte pondérées sont utilisées pour traiter le déséquilibre des classes.
+
+Enfin, des approches d’apprentissage à partir de peu d’exemples (\textit{few-shot learning}) sont explorées sur les meilleurs modèles afin d’évaluer leur capacité à généraliser aux maladies rares. Les résultats montrent que ces modèles conservent de bonnes performances même dans des scénarios à faibles ressources, soulignant leur potentiel pour la classification de maladies rares.
+
+\vspace*{\stretch{0.5}}
+
+\newpage
+\vspace*{\stretch{0.2}}
+\scalebox{2.5}{\textbf{Remerciements}} 
+\vspace{1cm}
+
+Je remercie sincèrement Jéhovah, le Très Miséricordieux et Plein de Sagesse, pour m’avoir accordé la force et la persévérance nécessaires à la poursuite de mes études et à l’achèvement de ce mémoire. Sa miséricorde infinie a été une source constante de guidance dans tous mes accomplissements, et je lui en suis éternellement reconnaissant.
+
+J’adresse ma plus profonde gratitude au Professeur Ashwin Ittoo pour ses conseils avisés, son encouragement et son soutien indéfectible tout au long de cette recherche. Son encadrement a joué un rôle déterminant dans la consolidation de mes connaissances et la qualité de ce travail. Je remercie également l’ensemble des professeurs et assistants de l’Université de Liège pour leur enseignement et leur expertise, qui ont grandement contribué à la réussite de ce mémoire.
+
+Je tiens aussi à exprimer toute ma reconnaissance à mes parents pour leur soutien constant et pour avoir su créer un environnement propice à mes études. Leur encouragement a toujours été une source essentielle de motivation. Enfin, je suis reconnaissant envers mes amis pour leur amitié, leurs expériences partagées et leur soutien mutuel, qui ont enrichi mon parcours académique et personnel. La camaraderie et l'entraide que j’ai reçues ont rendu cette aventure véritablement enrichissante, et pour cela, je suis profondément reconnaissant.
+
+\vspace*{\stretch{0.5}}
+\newpage
+
+\tableofcontents  % Table des matières
+\newpage
+
+\printglossary[type=\acronymtype]
+
+
+\newpage
+
+\chapter{Introduction}
+
+\vspace{0.5cm}
+L’analyse et la compréhension automatiques du langage humain sont devenues des éléments clés de l’\gls{ia} moderne, avec le \gls{tln} émergeant comme une discipline centrale à l’intersection de l’informatique, de la linguistique et des sciences cognitives. L’une des tâches fondamentales du \gls{tln} est la classification de textes, soit le processus consistant à attribuer des catégories ou des étiquettes prédéfinies aux données textuelles. La classification de textes soutient une large gamme d’applications pratiques, telles que la détection de spam dans les courriels, l’analyse de sentiments dans les critiques de produits, la détection de sujets dans les articles de presse, et l’annotation de documents juridiques et financiers. Avec la prolifération continue des informations numériques, la capacité à organiser automatiquement et de manière précise de grands volumes de textes non structurés est devenue essentielle dans de nombreux domaines. 
+
+Malgré les progrès réalisés dans le \gls{tln}, la classification de textes reste un défi en raison de l’ambiguïté inhérente au langage naturel, des dépendances contextuelles complexes, de la diversité syntaxique et des nuances sémantiques. Dans ce contexte, la classification de textes biomédicaux représente un cas particulièrement difficile. Le domaine biomédical se caractérise par un vocabulaire hautement spécialisé, des structures grammaticales complexes et une terminologie en évolution rapide, alimentée par les récentes découvertes scientifiques. Les publications scientifiques, les rapports d’essais cliniques et les dossiers médicaux sont souvent riches en informations spécialisées, ce qui les rend difficiles à traiter à l’aide de modèles linguistiques généraux ou de systèmes basés sur des règles. De plus, l’échelle et la rapidité avec lesquelles la littérature biomédicale est produite—illustrée par des bases de données telles que PubMed—exigent des solutions automatisées capables de traiter et de catégoriser des millions de résumés de manière efficace et précise. 
+
+Cette étude se concentre sur deux tâches principales de classification de textes biomédicaux extraites de PubMed. La première tâche est une tâche de classification binaire, où les étiquettes sont : Malaria vs. Non-Malaria (avec des sous-catégories telles qu’Alzheimer et Dengue). L’ensemble de données comprend 29 997 résumés, avec un déséquilibre dans la distribution des classes. La deuxième tâche est une tâche de classification multiclass, où les étiquettes sont constituées de neuf classes de maladies, notamment la tuberculose, le choléra, le lupus, et la fibrose kystique. Cet ensemble de données comporte 42 879 résumés, également déséquilibrés. Tous les résumés proviennent de la base de données PubMed, couvrant la période de 1950 à 2024. 
+
+Une classification biomédicale de textes efficace pourrait avoir des avantages substantiels. Une catégorisation précise des résumés scientifiques par maladie, traitement ou résultats cliniques pourrait faciliter les revues de littérature, améliorer la prise de décision clinique fondée sur des preuves, soutenir la surveillance épidémiologique et accélérer l’identification des tendances de recherche. Cependant, les méthodes traditionnelles d’apprentissage automatique présentent des limites lorsqu’il s’agit de traiter la complexité des textes biomédicaux et le déséquilibre significatif des classes, où les maladies rares sont souvent sous-représentées par rapport aux maladies plus courantes. 
+
+Cette thèse cherche à relever ces défis en explorant l’efficacité des méthodes avancées d’apprentissage profond, spécifiquement les architectures \gls{lstm}, \gls{gru}, et GRU bidirectionnels avec Attention de Bahdanau, dans la classification de textes biomédicaux. Ces modèles, conçus pour traiter des données séquentielles et capturer les dépendances à long terme, sont bien adaptés aux exigences linguistiques de la littérature biomédicale. Cependant, la complexité de ces modèles, en termes d’architecture et de coût computationnel, notamment en ce qui concerne le temps d’entraînement et les exigences en ressources, mène à la première question de recherche : Les gains en performance prédictive offerts par des architectures d’apprentissage profond plus complexes sont-ils justifiés par leur temps d’entraînement supplémentaire et leur surcharge computationnelle ? 
+
+Un autre aspect clé de cette étude est l’examen des représentations textuelles utilisées pour entraîner ces modèles. D’une part, les embeddings traditionnels tels que \gls{glove} et FastText sont pré-entraînés sur des corpus généraux et capturent les relations sémantiques globales. D’autre part, les embeddings contextuels tels que \gls{biobert} et \gls{pubmedbert}, pré-entraînés sur des corpus biomédicaux, intègrent des connaissances spécifiques au domaine et sont susceptibles d’améliorer les résultats de classification. La comparaison entre ces deux types d’embeddings est cruciale pour évaluer leur impact sur la performance des modèles, le temps d’entraînement et le temps d’inférence, ce qui conduit à la deuxième question de recherche : Comment les embeddings \gls{glove} et FastText (embeddings de mots pré-entraînés sur des corpus généraux) se comparent-ils aux embeddings \gls{biobert} et \gls{pubmedbert} (embeddings contextuels pré-entraînés sur des corpus biomédicaux) en termes de performance prédictive, ainsi que de leur impact sur le temps d’entraînement et d’inférence ? 
+
+Enfin, cette thèse explore la manière dont ces modèles peuvent se généraliser dans des scénarios où les données sont rares, en particulier pour les maladies rares, qui souffrent souvent d’un manque de données étiquetées. Ce défi est abordé par l’utilisation de l’apprentissage avec peu d’exemples (\emph{few-shot learning}) et de techniques d’augmentation des données visant à améliorer les performances des modèles dans des contextes à faibles ressources. La troisième question de recherche posée est : Dans quelle mesure les meilleurs modèles généralisent-ils les catégories de maladies sous-représentées, et les méthodes d’apprentissage avec peu d’exemples peuvent-elles améliorer efficacement la classification dans des scénarios à faibles ressources ? 
+
+À travers ces investigations, cette thèse cherche non seulement à évaluer la performance de diverses approches d’apprentissage profond pour la classification de textes biomédicaux, mais aussi à analyser les compromis impliqués dans leur mise en œuvre dans des contextes réels. L’objectif est d’identifier des modèles robustes, évolutifs et interprétables qui conviennent à la recherche biomédicale et aux applications de santé.
+
+\vspace{0.5cm}
+
+\newpage
+
+\chapter{Contexte théorique et technique}
+
+\section{TLN dans le domaine biomédical}
+
+Le \gls{tln} est un sous-domaine de l'\gls{ia} qui vise à permettre aux ordinateurs de comprendre, d’interpréter et de générer du langage humain. Alors que le \gls{tln} a connu des succès dans de nombreux domaines, il présente des défis particuliers lorsqu'il est appliqué au domaine biomédical. Les textes biomédicaux, tels que les articles scientifiques, les résumés de publications, les rapports de recherche et les dossiers médicaux électroniques, se caractérisent par un vocabulaire hautement spécialisé, des structures grammaticales complexes et une évolution rapide des terminologies \cite{devlin2019bert}.
+
+Les textes biomédicaux contiennent une combinaison d'éléments techniques, médicaux et biologiques. Des termes spécifiques tels que des noms de maladies, des traitements, des médicaments, des procédés biologiques, des résultats d'études cliniques, etc., sont utilisés dans des contextes variés. Ces termes ne sont souvent pas présents dans les corpus linguistiques généraux sur lesquels les modèles \gls{tln} sont souvent formés. De plus, ces textes incluent fréquemment des abréviations, des acronymes et des termes peu communs qui ne sont pas toujours définis ou expliqués dans le texte. Par conséquent, les modèles \gls{tln} classiques, préformés sur des corpus généraux, comme ceux utilisés dans les réseaux sociaux ou les journaux, peuvent avoir des performances insuffisantes lorsqu’ils sont appliqués aux textes biomédicaux \cite{lee2020biobert}.
+
+Le domaine biomédical génère une quantité énorme d'informations non structurées sous forme de résumés de recherche, d'articles scientifiques, de bases de données cliniques, etc. Ces informations doivent être traitées, analysées et structurées pour être utiles dans des contextes pratiques tels que la recherche scientifique, la prise de décision clinique et l'épidémiologie. Cependant, les données non structurées présentent des défis supplémentaires en termes de bruit et d'ambiguïté linguistique. Par exemple, un même terme peut avoir plusieurs significations selon le contexte (par exemple, "cellule" peut désigner une cellule biologique ou une cellule d'un réseau). En outre, le manque de données étiquetées pour certaines maladies rares ou sous-représentées complique l’entraînement de modèles robustes \cite{mikolov2018advances}.
+
+Un autre défi majeur du \gls{tln} biomédical est l'évolution rapide des connaissances médicales. De nouveaux traitements, médicaments, technologies et découvertes scientifiques sont publiés chaque jour. Les modèles \gls{tln} doivent donc être capables de s'adapter rapidement aux nouvelles informations et de prendre en compte cette évolution dynamique. De plus, des termes spécifiques, des concepts et des relations sont continuellement introduits, ce qui nécessite un ajustement constant des modèles et des embeddings. Cela a mené à l'émergence d'approches comme l'apprentissage contextuel, où des modèles comme BioBERT et PubMedBERT sont pré-entrainés sur de vastes corpus biomédicaux et finement ajustés pour mieux comprendre ces textes \cite{lee2020biobert, gupta2021pubmedbert}.
+
+Avec la complexité croissante des données, les approches basées sur les modèles de langage traditionnels, tels que les modèles vectoriels (FastText, GloVe), n'ont pas été suffisantes pour traiter de manière efficace le langage spécifique au domaine biomédical. Il devient nécessaire d'exploiter des architectures plus sophistiquées telles que les modèles récurrents (\gls{rnn}, \gls{lstm}, \gls{gru}) et les mécanismes d'attention pour capturer les relations complexes et les dépendances dans des séquences longues de texte. De plus, les modèles comme BERT et ses variantes comme BioBERT sont devenus des outils de prédilection pour le traitement des textes biomédicaux, car ils intègrent des connaissances spécifiques au domaine tout en étant capables d'extraire des représentations contextuelles riches \cite{devlin2019bert, lee2020biobert}.
+
+Le traitement automatique des textes biomédicaux a des implications profondes dans plusieurs domaines clés. En recherche scientifique, il permet d'automatiser le tri des publications pertinentes dans des domaines spécifiques, comme la recherche sur les maladies rares ou les traitements spécifiques. Dans un contexte clinique, il peut être utilisé pour améliorer la prise de décision médicale en extrayant automatiquement des informations des dossiers médicaux ou des études cliniques. Le \gls{tln} est également utilisé dans des systèmes de surveillance épidémiologique pour extraire des tendances et des relations cachées dans de grandes quantités de données médicales \cite{mikolov2018advances}.
+
+\section{Architectures Séquentielles (RNN, LSTM, GRU)}
+
+\subsection{Réseaux de Neurones Récurrents (RNN)}
+
+Les réseaux de neurones récurrents (\gls{rnn}) constituent une catégorie de modèles conçus pour le traitement de données séquentielles. Contrairement aux réseaux à propagation avant (feedforward), les \gls{rnn} incorporent une boucle récurrente permettant à l’information d’être propagée d’un instant temporel à l’autre, ce qui les rend aptes à modéliser des dépendances temporelles dans les données. Ils se distinguent par leur capacité à mémoriser les états précédents dans une séquence. À chaque instant \( t \), l’état caché \( h_t \) est calculé à partir de l’entrée \( x_t \) et de l’état précédent \( h_{t-1} \), selon la relation suivante :
+
+\[
+h_t = f(Wx_t + Uh_{t-1} + b)
+\]
+
+où \( W \) et \( U \) sont les matrices de poids associées respectivement à l’entrée et à l’état précédent, \( b \) est un biais, et \( f \) est une fonction d’activation, généralement une fonction tanh ou sigmoïde. Cette structure permet aux \gls{rnn} d’accumuler une mémoire contextuelle dans la séquence.
+
+Grâce à cette architecture, les \gls{rnn} sont capables de capturer les relations temporelles au sein d’une séquence. Cela les rend particulièrement adaptés au traitement de flux de données ordonnées telles que des séries temporelles, du texte ou du signal audio. Leur efficacité repose sur leur aptitude à traiter des séquences de longueur variable tout en conservant un état interne qui résume l'information passée.
+
+Cependant, malgré cette capacité à gérer des données séquentielles, les \gls{rnn} classiques présentent certaines limitations majeures. Ils souffrent notamment des problèmes de disparition et d’explosion du gradient \cite{bengio1994learning}, qui peuvent survenir lors de l’apprentissage sur de longues séquences. Le premier rend difficile l’ajustement des poids dans les couches profondes, tandis que le second entraîne des mises à jour instables des paramètres du modèle. Ces limitations réduisent l’efficacité des \gls{rnn} pour modéliser des dépendances à long terme et ont conduit au développement de variantes améliorées telles que les \gls{lstm} et \gls{gru}.
+
+Pour mieux visualiser le principe de fonctionnement des \gls{rnn}, la figure suivante illustre les connexions récurrentes entre l’entrée \( x_t \), l’état caché \( h_t \), la sortie \( L_t \) et la propagation de l’information au fil des étapes temporelles.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.55\textwidth]{rnn_image.png} % Vérifiez que l'image est dans le bon dossier
+    \caption{Illustration du fonctionnement des Réseaux de Neurones Récurrents (RNN) \cite{source_image}}
+    \label{fig:rnn_architecture}
+\end{figure}
+
+\subsection{Long Short-Term Memory (LSTM)}
+
+Les réseaux Long Short-Term Memory (\gls{lstm}) représentent une extension sophistiquée des réseaux de neurones récurrents (\gls{rnn}) traditionnels, conçue pour remédier à leurs limitations dans la capture des dépendances à long terme, notamment les problèmes de disparition ou d'explosion du gradient. Introduite par Hochreiter et Schmidhuber en 1997 \cite{hochreiter1997long}, l’architecture \gls{lstm} repose sur une cellule mémoire interne capable de conserver de l’information sur de longues séquences, contrôlée par un système de portes spécialisées.
+
+À chaque instant temporel \( t \), les opérations fondamentales d'une cellule \gls{lstm} sont décrites par les équations suivantes :
+
+\begin{align*}
+f_t &= \sigma(W_f x_t + U_f h_{t-1} + b_f) \quad &\text{(Porte d'oubli)} \\
+i_t &= \sigma(W_i x_t + U_i h_{t-1} + b_i) \quad &\text{(Porte d'entrée)} \\
+\tilde{c}_t &= \tanh(W_c x_t + U_c h_{t-1} + b_c) \quad &\text{(État cellulaire candidat)} \\
+c_t &= f_t \odot c_{t-1} + i_t \odot \tilde{c}_t \quad &\text{(Mise à jour de la cellule)} \\
+o_t &= \sigma(W_o x_t + U_o h_{t-1} + b_o) \quad &\text{(Porte de sortie)} \\
+h_t &= o_t \odot \tanh(c_t) \quad &\text{(État caché)}
+\end{align*}
+
+où :
+\begin{itemize}
+    \item \( x_t \) représente l’entrée à l’instant \( t \) ;
+    \item \( h_{t-1} \) est l’état caché précédent ;
+    \item \( f_t \), \( i_t \), \( o_t \) sont respectivement les vecteurs de la porte d’oubli, d’entrée et de sortie ;
+    \item \( c_t \) désigne l’état de la cellule mémoire à l’instant \( t \) ;
+    \item \( \tilde{c}_t \) est l’état cellulaire candidat proposé ;
+    \item \( \sigma \) est la fonction sigmoïde, \( \tanh \) la tangente hyperbolique, et \( \odot \) désigne le produit élément par élément.
+\end{itemize}
+
+Cette structure permet aux \gls{lstm} de décider dynamiquement quelles informations conserver, mettre à jour ou émettre, offrant ainsi une capacité de mémorisation sélective très utile pour le traitement de séquences complexes. Grâce à cette flexibilité, les \gls{lstm} se sont imposés comme une référence dans de nombreuses tâches telles que la modélisation du langage, la traduction automatique, ou encore l’analyse de séries temporelles.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{lstm_image.png}
+    \caption{Logique de l'architecture LSTM \cite{source_lstm_image}.}
+    \label{fig:lstm_architecture}
+\end{figure}
+
+\bigskip
+
+\noindent Bien que puissants, les \gls{lstm} présentent une certaine complexité computationnelle en raison du nombre élevé de paramètres associés à leurs multiples portes. Pour proposer une alternative plus légère mais néanmoins efficace, la communauté a introduit une architecture simplifiée : le Gated Recurrent Unit (GRU).
+
+\subsection{Gated Recurrent Unit (GRU)}
+
+Le Gated Recurrent Unit (\gls{gru}) est une variante des \gls{rnn} introduite par Cho et al. en 2014 \cite{cho2014learning}, visant à réduire la complexité du modèle tout en maintenant des performances comparables à celles des \gls{lstm}. Contrairement aux \gls{lstm}, les \gls{gru} fusionnent les fonctions des portes d’oubli et d’entrée en une seule "porte de mise à jour", et n’utilisent pas d’état cellulaire distinct du vecteur caché. Cette simplification permet une convergence plus rapide et une efficacité accrue dans certaines tâches.
+
+Les équations gouvernant une cellule \gls{gru} sont les suivantes :
+
+\begin{align*}
+z_t &= \sigma(W_z x_t + U_z h_{t-1} + b_z) \quad &\text{(Porte de mise à jour)} \\
+r_t &= \sigma(W_r x_t + U_r h_{t-1} + b_r) \quad &\text{(Porte de réinitialisation)} \\
+\tilde{h}_t &= \tanh(W_h x_t + U_h (r_t \odot h_{t-1}) + b_h) \quad &\text{(État candidat)} \\
+h_t &= (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t \quad &\text{(État caché)}
+\end{align*}
+
+où :
+\begin{itemize}
+    \item \( z_t \) est la porte de mise à jour ;
+    \item \( r_t \) est la porte de réinitialisation ;
+    \item \( \tilde{h}_t \) est l’état caché candidat ;
+    \item \( h_t \) est l’état caché final de la cellule GRU à l’instant \( t \).
+\end{itemize}
+
+Cette architecture compacte permet aux \gls{gru} de s’adapter efficacement aux dépendances temporelles tout en limitant la charge computationnelle.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.3\textwidth]{gru_image.png} % À ajouter dans le dossier du projet
+    \caption{Illustration de l'unité récurrente convolutive (GRU) \cite{source_gru_image}.}
+    \label{fig:gru_architecture}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\begin{thebibliography}{99}
+
+\bibitem{devlin2019bert}
+J. Devlin, M. W. Chang, K. Lee, and K. Toutanova, 
+\textit{BERT: Pre-training of deep bidirectional transformers for language understanding}, 
+NAACL-HLT 2019, pp. 4171–4186, 2019. 
+\url{https://arxiv.org/abs/1810.04805}
+
+\bibitem{lee2020biobert}
+J. Lee, W. Yoon, S. Kim, D. Kim, and C. H. So, 
+\textit{BioBERT: A pre-trained biomedical language representation model for biomedical text mining}, 
+Bioinformatics, vol. 36, no. 4, pp. 1234–1240, 2020. 
+\url{https://doi.org/10.1093/bioinformatics/btz682}
+
+\bibitem{gupta2021pubmedbert}
+A. Gupta and A. Agarwal, 
+\textit{PubMedBERT: A pre-trained biomedical language representation model for PubMed abstracts}, 
+arXiv preprint arXiv:2102.09714, 2021. 
+\url{https://arxiv.org/abs/2102.09714}
+
+\bibitem{mikolov2010recurrent}
+T. Mikolov, M. Karafiát, L. Burget, J. Černocký, and S. Khudanpur, 
+\textit{Recurrent neural network based language model}, 
+In Interspeech, vol. 2, pp. 1045–1048, 2010.
+
+\bibitem{hochreiter1997long}
+S. Hochreiter and J. Schmidhuber, 
+\textit{Long short-term memory}, 
+Neural Computation, vol. 9, no. 8, pp. 1735–1780, 1997.
+
+\bibitem{cho2014learning}
+K. Cho, B. van Merriënboer, D. Bahdanau, and Y. Bengio, 
+\textit{Learning phrase representations using RNN encoder-decoder for statistical machine translation}, 
+arXiv preprint arXiv:1406.1078, 2014. 
+\url{https://arxiv.org/abs/1406.1078}
+
+\bibitem{yin2017comparative}
+W. Yin, K. Kann, M. Yu, and H. Schütze, 
+\textit{Comparative study of CNN and RNN for natural language processing}, 
+arXiv preprint arXiv:1702.01923, 2017. 
+\url{https://arxiv.org/abs/1702.01923}
+
+\bibitem{jin2019recurrent}
+Q. Jin, B. Dhingra, X. Liu, W. Cohen, and E. Hovy, 
+\textit{Recurrent neural network models for disease name recognition using domain-invariant features}, 
+In Proceedings of the BioNLP 2019 Workshop, pp. 1–10, 2019.
+
+\bibitem{zhang2020biowordvec}
+Y. Zhang, Q. Chen, Z. Yang, H. Lin, and Z. Lu, 
+\textit{BioWordVec, improving biomedical word embeddings with subword information and MeSH}, 
+Scientific Data, vol. 6, no. 52, 2020. 
+\url{https://doi.org/10.1038/s41597-019-0055-0}
+
+\bibitem{elman1990finding}
+J. L. Elman, "Finding structure in time," \textit{Cognitive Science}, vol. 14, no. 2, pp. 179-211, 1990.
+
+\bibitem{mikolov2010recurrent_2}
+T. Mikolov, et al., "Recurrent neural network based language model," \textit{Proceedings of the 11th Annual Conference of the International Speech Communication Association}, 2010.
+
+\bibitem{bengio1994learning}
+Y. Bengio, et al., "Learning long-term dependencies with gradient descent is difficult," \textit{IEEE Transactions on Neural Networks}, vol. 5, no. 2, pp. 157-166, 1994.
+
+\bibitem{jia2019deep}
+L. Jia, et al., "Deep learning for medical text mining: A survey," \textit{Journal of Biomedical Informatics}, vol. 96, pp. 103-118, 2019.
+
+\bibitem{mikolov2018advances}
+T. Mikolov and others, 
+\textit{Advances in pretraining models}, 
+Journal of Machine Learning, vol. 10, pp. 1–10, 2018.
+
+\bibitem{cho2014learning}
+Cho, K., van Merriënboer, B., Bahdanau, D., \& Bengio, Y. (2014).
+\textit{Learning phrase representations using RNN encoder-decoder for statistical machine translation}.
+arXiv preprint arXiv:1406.1078.
+
+
+
+
+\bibitem{source_image}
+\textit{Architecture des Réseaux de Neurones Récurrents}, 
+Disponible sur: \url{https://miro.medium.com/v2/resize:fit:660/1*uLTBA8Myf6_IwtpfLr4Xpg.png}, 
+Accédé le 9 mai 2025.
+
+\bibitem{source_lstm_image}
+\textit{Logique de l'architecture LSTM}, 
+Disponible sur: \url{https://sl.bing.net/bWWTQ1HkC7M}, 
+Consulté le 9 mai 2025.
+
+\bibitem{source_gru_image}
+\textit{Illustration de l'unité récurrente convolutive (GRU)}, 
+disponible en ligne : \url{https://sl.bing.net/eY21glZpxUO}, consulté en mai 2025.
+
+
+
+
+
+
+
+
+
+
+
+\end{thebibliography}
+
+\end{document}
+-------------------------------------------------------------------------------------------------------------------------------
+
+
