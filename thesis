@@ -7,11 +7,20 @@
 \usepackage{lmodern}
 \usepackage[french]{babel}
 \usepackage[acronym]{glossaries}
+\usepackage{amsmath}              % pour les formules mathématiques          % 
+\usepackage{cite}  
+\usepackage{float}
+
+
 
 \usepackage{url}
 \usepackage[a4paper, left=2.5cm, right=2.5cm, top=2cm, bottom=2cm]{geometry}
 
 \makeglossaries
+\newglossaryentry{fasttext}{
+    name=FastText,
+    description={Modèle développé par Facebook AI pour des représentations vectorielles de mots prenant en compte les sous-mots}
+}
 
 \newacronym{tln}{TLN}{Traitement du Langage Naturel}
 \newacronym{ia}{IA}{Intelligence Artificielle}
@@ -20,11 +29,14 @@
 \newacronym{gru}{GRU}{Gated Recurrent Unit}
 \newacronym{pubmedbert}{PubMedBERT}{PubMed BERT, un modèle de langage préentraîné spécifique au domaine biomédical}
 \newacronym{biobert}{BioBERT}{BioBERT, une variante de BERT pour le domaine biomédical}
-\newacronym{smote}{SMOTE}{Technique de suréchantillonnage de la minorité synthétique}
+\newacronym{smote}{SMOTE}{\textit{Synthetic Minority Over-sampling Technique} (technique de suréchantillonnage synthétique pour les classes minoritaires)}
 \newacronym{bert}{BERT}{Représentations encodées bidirectionnelles des transformeurs}
 \newacronym{glove}{GloVe}{Vecteurs globaux pour la représentation de mots}
+\newacronym{w2v}{Word2Vec}{méthode d'apprentissage de représentations vectorielles des mots développée par Mikolov et al.}
+\newacronym{fsl}{FSL}{Few-Shot Learning}
+\newacronym{auc}{AUC}{Area Under the Curve}
+\newacronym{tsne}{t-SNE}{Projection Stochastique Voisine en Faible Dimension (\textit{t-distributed Stochastic Neighbor Embedding})}
 
-\usepackage[T1]{fontenc}
 
 \begin{document}
 \sloppy
@@ -76,7 +88,7 @@
 \scalebox{2.5}{\textbf{Abstract}} 
 \vspace{1cm}
 
-La classification de textes biomédicaux constitue une tâche complexe en raison de la terminologie spécialisée et des structures linguistiques élaborées propres à la littérature scientifique. Ce mémoire évalue l’efficacité de modèles d’apprentissage profond — \gls{lstm}, \gls{gru} et GRU bidirectionnel avec mécanisme d’attention de Bahdanau — pour classifier des résumés biomédicaux selon des catégories de maladies. À l’aide de jeux de données extraits de PubMed, des expériences sont menées pour des tâches de classification binaire (paludisme vs non-paludisme) et multiclasse (9 maladies).
+La classification de textes biomédicaux constitue une tâche complexe en raison de la terminologie spécialisée et des structures linguistiques élaborées propres à la littérature scientifique. Ce mémoire évalue l’efficacité de modèles d’apprentissage profond — \gls{lstm}, \gls{gru} et \gls{gru} bidirectionnel avec mécanisme d’attention de Bahdanau — pour classifier des résumés biomédicaux selon des catégories de maladies. À l’aide de jeux de données extraits de PubMed, des expériences sont menées pour des tâches de classification binaire (paludisme vs non-paludisme) et multiclasse (9 maladies).
 
 Nous commençons par entraîner des modèles avec des plongements lexicaux (embeddings) appris à partir de zéro afin d’établir une base de référence. Ensuite, nous examinons l’impact d’approches plus avancées, incluant des vecteurs statiques préentraînés (\gls{glove}, FastText) et des modèles de type \textit{transformer} spécialisés — notamment \gls{bert} et PubMedBERT. Bien que ces représentations préentraînées améliorent significativement la précision et la compréhension contextuelle, en particulier lorsqu’elles sont combinées à des mécanismes d’attention, elles accroissent également la complexité et le temps d’apprentissage. Ce travail analyse ainsi le compromis entre performance et coût computationnel. Des techniques telles que \gls{smote}, Borderline-SMOTE et les fonctions de perte pondérées sont utilisées pour traiter le déséquilibre des classes.
 
@@ -108,7 +120,6 @@ Je tiens aussi à exprimer toute ma reconnaissance à mes parents pour leur sout
 
 \chapter{Introduction}
 
-\vspace{0.5cm}
 L’analyse et la compréhension automatiques du langage humain sont devenues des éléments clés de l’\gls{ia} moderne, avec le \gls{tln} émergeant comme une discipline centrale à l’intersection de l’informatique, de la linguistique et des sciences cognitives. L’une des tâches fondamentales du \gls{tln} est la classification de textes, soit le processus consistant à attribuer des catégories ou des étiquettes prédéfinies aux données textuelles. La classification de textes soutient une large gamme d’applications pratiques, telles que la détection de spam dans les courriels, l’analyse de sentiments dans les critiques de produits, la détection de sujets dans les articles de presse, et l’annotation de documents juridiques et financiers. Avec la prolifération continue des informations numériques, la capacité à organiser automatiquement et de manière précise de grands volumes de textes non structurés est devenue essentielle dans de nombreux domaines. 
 
 Malgré les progrès réalisés dans le \gls{tln}, la classification de textes reste un défi en raison de l’ambiguïté inhérente au langage naturel, des dépendances contextuelles complexes, de la diversité syntaxique et des nuances sémantiques. Dans ce contexte, la classification de textes biomédicaux représente un cas particulièrement difficile. Le domaine biomédical se caractérise par un vocabulaire hautement spécialisé, des structures grammaticales complexes et une terminologie en évolution rapide, alimentée par les récentes découvertes scientifiques. Les publications scientifiques, les rapports d’essais cliniques et les dossiers médicaux sont souvent riches en informations spécialisées, ce qui les rend difficiles à traiter à l’aide de modèles linguistiques généraux ou de systèmes basés sur des règles. De plus, l’échelle et la rapidité avec lesquelles la littérature biomédicale est produite—illustrée par des bases de données telles que PubMed—exigent des solutions automatisées capables de traiter et de catégoriser des millions de résumés de manière efficace et précise. 
@@ -119,7 +130,7 @@ Une classification biomédicale de textes efficace pourrait avoir des avantages 
 
 Cette thèse cherche à relever ces défis en explorant l’efficacité des méthodes avancées d’apprentissage profond, spécifiquement les architectures \gls{lstm}, \gls{gru}, et GRU bidirectionnels avec Attention de Bahdanau, dans la classification de textes biomédicaux. Ces modèles, conçus pour traiter des données séquentielles et capturer les dépendances à long terme, sont bien adaptés aux exigences linguistiques de la littérature biomédicale. Cependant, la complexité de ces modèles, en termes d’architecture et de coût computationnel, notamment en ce qui concerne le temps d’entraînement et les exigences en ressources, mène à la première question de recherche : Les gains en performance prédictive offerts par des architectures d’apprentissage profond plus complexes sont-ils justifiés par leur temps d’entraînement supplémentaire et leur surcharge computationnelle ? 
 
-Un autre aspect clé de cette étude est l’examen des représentations textuelles utilisées pour entraîner ces modèles. D’une part, les embeddings traditionnels tels que \gls{glove} et FastText sont pré-entraînés sur des corpus généraux et capturent les relations sémantiques globales. D’autre part, les embeddings contextuels tels que \gls{biobert} et \gls{pubmedbert}, pré-entraînés sur des corpus biomédicaux, intègrent des connaissances spécifiques au domaine et sont susceptibles d’améliorer les résultats de classification. La comparaison entre ces deux types d’embeddings est cruciale pour évaluer leur impact sur la performance des modèles, le temps d’entraînement et le temps d’inférence, ce qui conduit à la deuxième question de recherche : Comment les embeddings \gls{glove} et FastText (embeddings de mots pré-entraînés sur des corpus généraux) se comparent-ils aux embeddings \gls{biobert} et \gls{pubmedbert} (embeddings contextuels pré-entraînés sur des corpus biomédicaux) en termes de performance prédictive, ainsi que de leur impact sur le temps d’entraînement et d’inférence ? 
+Un autre aspect clé de cette étude est l’examen des représentations textuelles utilisées pour entraîner ces modèles. D’une part, les embeddings traditionnels tels que \gls{glove} et FastText sont pré-entraînés sur des corpus généraux et capturent les relations sémantiques globales. D’autre part, les embeddings contextuels tels que \gls{biobert} et \gls{pubmedbert}, pré-entraînés sur des corpus biomédicaux, intègrent des connaissances spécifiques au domaine et sont susceptibles d’améliorer les résultats de classification. La comparaison entre ces deux types d’embeddings est cruciale pour évaluer leur impact sur la performance des modèles, le temps d’entraînement et le temps d’inférence, ce qui conduit à la deuxième question de recherche : Comment les embeddings \gls{glove} et \gls{fasttext} (embeddings de mots pré-entraînés sur des corpus généraux) se comparent-ils aux embeddings \gls{biobert} et \gls{pubmedbert} (embeddings contextuels pré-entraînés sur des corpus biomédicaux) en termes de performance prédictive, ainsi que de leur impact sur le temps d’entraînement et d’inférence ? 
 
 Enfin, cette thèse explore la manière dont ces modèles peuvent se généraliser dans des scénarios où les données sont rares, en particulier pour les maladies rares, qui souffrent souvent d’un manque de données étiquetées. Ce défi est abordé par l’utilisation de l’apprentissage avec peu d’exemples (\emph{few-shot learning}) et de techniques d’augmentation des données visant à améliorer les performances des modèles dans des contextes à faibles ressources. La troisième question de recherche posée est : Dans quelle mesure les meilleurs modèles généralisent-ils les catégories de maladies sous-représentées, et les méthodes d’apprentissage avec peu d’exemples peuvent-elles améliorer efficacement la classification dans des scénarios à faibles ressources ? 
 
@@ -163,10 +174,10 @@ Cependant, malgré cette capacité à gérer des données séquentielles, les \g
 
 Pour mieux visualiser le principe de fonctionnement des \gls{rnn}, la figure suivante illustre les connexions récurrentes entre l’entrée \( x_t \), l’état caché \( h_t \), la sortie \( L_t \) et la propagation de l’information au fil des étapes temporelles.
 
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.55\textwidth]{rnn_image.png} % Vérifiez que l'image est dans le bon dossier
-    \caption{Illustration du fonctionnement des Réseaux de Neurones Récurrents (RNN) \cite{source_image}}
+    \includegraphics[width=0.55\textwidth]{rnn_image.png}
+    \caption{Illustration du fonctionnement des Réseaux de Neurones Récurrents (RNN). Source : \url{https://miro.medium.com/v2/resize:fit:660/1*uLTBA8Myf6_IwtpfLr4Xpg.png}}
     \label{fig:rnn_architecture}
 \end{figure}
 
@@ -197,10 +208,10 @@ où :
 
 Cette structure permet aux \gls{lstm} de décider dynamiquement quelles informations conserver, mettre à jour ou émettre, offrant ainsi une capacité de mémorisation sélective très utile pour le traitement de séquences complexes. Grâce à cette flexibilité, les \gls{lstm} se sont imposés comme une référence dans de nombreuses tâches telles que la modélisation du langage, la traduction automatique, ou encore l’analyse de séries temporelles.
 
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{lstm_image.png}
-    \caption{Logique de l'architecture LSTM \cite{source_lstm_image}.}
+    \includegraphics[width=0.55\textwidth]{lstm_image.png}
+    \caption{Logique de l'architecture LSTM. Source : \url{https://sl.bing.net/bWWTQ1HkC7M}}
     \label{fig:lstm_architecture}
 \end{figure}
 
@@ -231,12 +242,347 @@ où :
 
 Cette architecture compacte permet aux \gls{gru} de s’adapter efficacement aux dépendances temporelles tout en limitant la charge computationnelle.
 
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.3\textwidth]{gru_image.png} % À ajouter dans le dossier du projet
-    \caption{Illustration de l'unité récurrente convolutive (GRU) \cite{source_gru_image}.}
+    \includegraphics[width=0.55\textwidth]{gru_image.png}
+    \caption{Illustration de l'unité récurrente à portes (GRU). Source : \url{https://sl.bing.net/bWWTQ1HkC7M}}
     \label{fig:gru_architecture}
 \end{figure}
+
+Cette architecture compacte permet aux \gls{gru} de s’adapter efficacement aux dépendances temporelles tout en limitant la charge computationnelle.
+
+\vspace{0.5cm}
+
+Cependant, malgré leur capacité à capturer des relations à long terme, les architectures séquentielles comme les \gls{lstm} et les \gls{gru} traitent les séquences de manière uniforme, sans accorder plus d’importance à certaines parties du texte qu’à d’autres. Pour pallier cette limitation, des mécanismes d’attention ont été introduits afin de permettre au modèle de se concentrer dynamiquement sur les éléments les plus pertinents de la séquence.
+
+Parmi ces approches, le mécanisme d’attention proposé par Bahdanau et al. \cite{bahdanau2015neural} s’est imposé comme une extension efficace, initialement conçue pour la traduction automatique. Dans le cadre de ce mémoire, une adaptation simplifiée de cette attention est utilisée pour pondérer les sorties d’un GRU bidirectionnel dans une tâche de classification. La section suivante détaille ce mécanisme.
+
+\subsection{Mécanisme d’attention de Bahdanau}
+
+Le mécanisme d'attention de Bahdanau, introduit dans le contexte de la traduction automatique neuronale \cite{bahdanau2015neural}, vise à surmonter les limitations des modèles séquentiels classiques qui compressent toute l’information d’une séquence dans un vecteur fixe. Cette compression peut être sous-optimale, notamment lorsque les séquences sont longues ou contiennent des informations dispersées.
+
+L’attention permet au modèle de pondérer dynamiquement les éléments de la séquence en fonction de leur pertinence pour la tâche à accomplir. Autrement dit, au lieu de traiter toutes les parties d’un texte de manière égale, le modèle apprend à se concentrer davantage sur certaines parties pertinentes pour la prédiction.
+
+Dans ce mémoire, une version simplifiée du mécanisme de Bahdanau est appliquée sur les sorties d’un \gls{gru} bidirectionnel. Concrètement, chaque sortie temporelle du \gls{gru} est transformée via un réseau feedforward afin de produire une importance (ou score d’attention). Ces scores sont ensuite normalisés via une fonction softmax pour obtenir des poids d’attention. Le vecteur de contexte est alors calculé comme une moyenne pondérée des états cachés de la séquence, où les poids reflètent la pertinence de chaque mot.
+
+Le vecteur caché à un instant \( t \) dans un \gls{gru} bidirectionnel est défini comme la concaténation des vecteurs issus de la direction avant et arrière de la séquence :
+
+\[
+h_t = [\overrightarrow{h_t}; \overleftarrow{h_t}]
+\]
+
+où \( \overrightarrow{h_t} \) et \( \overleftarrow{h_t} \) sont respectivement les états cachés générés par les passes avant et arrière du \gls{gru}.
+
+Le score d'attention pour chaque état caché à l'instant \( t \) est calculé comme suit :
+
+\[
+\text{score}_t = \mathbf{v}^\top \tanh(\mathbf{W} [\overrightarrow{h_t}; \overleftarrow{h_t}])
+\]
+
+L'importance relative de chaque élément de la séquence est ensuite calculée par une fonction softmax :
+
+\[
+\alpha_t = \frac{\exp(\text{score}_t)}{\sum_{t'} \exp(\text{score}_{t'})}
+\]
+
+Enfin, le vecteur de contexte, qui résume l'information pertinente des états cachés de la séquence, est obtenu par une somme pondérée des états cachés :
+
+\[
+\text{context} = \sum_t \alpha_t [\overrightarrow{h_t}; \overleftarrow{h_t}]
+\]
+
+Dans ces équations :
+
+\begin{itemize}
+    \item \( h_t \) est le vecteur caché à l’instant \( t \), qui est la concaténation des états cachés des directions avant et arrière;
+    \item \( \alpha_t \) est le poids d’attention associé à l’état caché \( h_t \);
+    \item \( \text{context} \) est le vecteur résultant, qui résume la séquence en mettant l’accent sur les éléments les plus pertinents.
+\end{itemize}
+
+Ce mécanisme permet au modèle d'exploiter à la fois les informations contextuelles antérieures et postérieures dans une séquence, ce qui est particulièrement utile pour des tâches comme la classification de textes biomédicaux, où un terme peut avoir un sens différent selon le contexte avant ou après son apparition.
+\newline
+
+Après avoir exploré le mécanisme d'attention de Bahdanau et son application dans des modèles séquentiels comme le \gls{gru} bidirectionnel, il est important de se pencher sur une autre composante essentielle dans les architectures de traitement du langage naturel : la représentation des mots et des phrases sous forme vectorielle. Ces représentations jouent un rôle fondamental dans la capture des relations sémantiques et contextuelles entre les termes.
+
+Dans cette optique, plusieurs techniques de représentation vectorielle ont émergé pour mieux comprendre et modéliser le langage. Parmi les plus populaires, on trouve \gls{glove}, \gls{fasttext}, ainsi que des modèles de plus grande envergure spécifiquement conçus pour les domaines biomédicaux, tels que \gls{pubmedbert} et \gls{biobert}. Ces approches ont permis de dépasser les limites des représentations classiques, en intégrant à la fois des informations globales (comme les cooccurrences de mots) et des informations contextuelles plus fines.
+
+La section suivante présente ces différentes techniques de représentation vectorielle, en mettant particulièrement l'accent sur leur application dans le domaine biomédical, où les termes sont souvent hautement spécialisés et contextuellement dépendants.
+
+\vspace{0.5cm}
+\section{Représentations de Vecteurs }
+
+Les performances des modèles de traitement du langage naturel dépendent en grande partie de la manière dont les mots sont représentés numériquement. En effet, avant même l'application de modèles séquentiels ou de mécanismes d’attention, les textes doivent être transformés en vecteurs exploitables par les algorithmes d'apprentissage automatique.
+
+Deux grandes familles de représentations vectorielles se distinguent : les \textit{word embeddings} statiques, qui attribuent un vecteur fixe à chaque mot indépendamment de son contexte, et les \textit{contextual embeddings}, qui ajustent dynamiquement les représentations en fonction du contexte d’apparition du mot dans la phrase.
+
+Dans cette section, nous explorons tout d’abord les approches classiques basées sur les \textit{word embeddings}, notamment \gls{glove} et \gls{fasttext}, qui ont marqué une avancée significative dans la capture des relations sémantiques entre les mots. Ensuite, nous présentons des méthodes plus récentes et plus puissantes reposant sur des modèles de type Transformer, comme \gls{biobert} et \gls{pubmedbert}, qui produisent des représentations contextuelles particulièrement adaptées aux textes biomédicaux.
+
+\subsection{Word Embeddings: GloVe and FastText}
+
+Les \textit{word embeddings} statiques permettent de représenter chaque mot par un vecteur dense dans un espace continu de dimension réduite. Ces représentations sont apprises à partir de grands corpus de textes en exploitant les cooccurrences entre les mots. Deux des approches les plus influentes dans ce domaine sont \gls{glove} et \gls{fasttext}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{we.png}
+    \caption{Illustration du principe des \textit{word embeddings} : les mots similaires sont projetés dans des régions proches de l’espace vectoriel. Source : \url{https://sl.bing.net/jumSq5RbE1Q}}
+    \label{fig:word_embeddings}
+\end{figure}
+
+\subsubsection{FastText}
+
+FastText \cite{bojanowski2017enriching}, développé par Facebook \gls{ia} Research, est une extension de \gls{w2v}, une méthode d’apprentissage de représentations vectorielles des mots développée par Mikolov et al. Contrairement à \gls{glove} ou \gls{w2v}, qui considèrent chaque mot comme une unité atomique, FastText représente un mot comme la somme des vecteurs de ses sous-unités, appelées \textit{n-grammes} de caractères. Formellement, si un mot \( w \) est composé de n-grammes \( g_1, g_2, \dots, g_K \), alors sa représentation vectorielle \( \mathbf{v}_w \) est définie comme :
+
+\[
+\mathbf{v}_w = \sum_{k=1}^{K} \mathbf{z}_{g_k}
+\]
+
+où \( \mathbf{z}_{g_k} \) est le vecteur associé au n-gramme \( g_k \).
+
+Par exemple, le mot `chat'' avec des trigrammes (n=3), serait représenté par les n-grammes suivants : \_ch'', cha'', hat'', at\_''. FastText ajoute également des délimiteurs de mot (\_'' au début et à la fin) pour distinguer les positions dans le mot.
+
+Cette représentation permet au modèle de partager l'information entre les mots ayant des morphologies similaires, ce qui le rend robuste aux mots rares ou inconnus (\textit{out-of-vocabulary}). De plus, FastText est capable de produire des vecteurs pour des mots absents du vocabulaire d’entraînement, tant que leurs sous-unités ont été observées.
+
+En conservant les propriétés sémantiques de \gls{w2v} tout en capturant des régularités morphologiques (préfixes, suffixes, racines), FastText est particulièrement adapté à des domaines spécialisés comme le biomédical, où les termes sont souvent longs, composés et rares.
+
+\subsubsection{GloVe}
+
+GloVe (Global Vectors for Word Representation) \cite{pennington2014glove} est une méthode d'apprentissage non supervisée qui combine les avantages des approches basées sur les fenêtres locales (comme Word2Vec) et des méthodes statistiques globales. Elle repose sur la construction d'une matrice de cooccurrence entre les mots dans un corpus, où chaque entrée \( X_{ij} \) correspond au nombre de fois que le mot \( j \) apparaît dans le contexte du mot \( i \).
+
+L’objectif du modèle est d’apprendre des vecteurs \( w_i \) et \( \tilde{w}_j \) pour chaque mot \( i \) et contexte \( j \) de sorte que leur produit scalaire approche le logarithme de \( X_{ij} \) :
+
+\[
+w_i^\top \tilde{w}_j + b_i + \tilde{b}_j \approx \log(X_{ij})
+\]
+
+où \( b_i \) et \( \tilde{b}_j \) sont des biais appris. En optimisant cette relation sur toutes les paires de mots fréquents, GloVe produit des embeddings qui capturent efficacement les relations sémantiques et analogiques, comme illustré par :
+
+\[
+\vec{\text{roi}} - \vec{\text{homme}} + \vec{\text{femme}} \approx \vec{\text{reine}}
+\]
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.35\textwidth]{glove.png}
+    \caption{Architecture du modèle GloVe, illustrant la construction des vecteurs à partir des cooccurrences. L'entrée est une représentation \textit{one-hot} d’un mot à un instant donné. Les matrices d'intégration des mots sont utilisées comme matrices de poids, et la sortie du modèle est un vecteur obtenu par produit scalaire entre les vecteurs de mots. Source : \url{https://www.researchgate.net/figure/The-model-architecture-of-GloVe-The-input-is-a-one-hot-representation-of-a-word-The_fig1_337461648}}
+    \label{fig:glove_architecture}
+\end{figure}
+
+\vspace{0.5em}
+Ces deux méthodes fournissent une base solide pour représenter les mots avant l'application de modèles de traitement plus complexes. Toutefois, leurs limites résident dans leur incapacité à désambiguïser les mots selon le contexte, ce qui a motivé l’émergence des représentations contextuelles abordées dans la section suivante.
+
+% Ici, développe BioBERT et PubMedBERT
+\subsection{Contextual Embeddings: BioBERT and PubMedBERT}
+
+Bien que les \textit{word embeddings} statiques comme \gls{glove} et \gls{fasttext}aient significativement amélioré la qualité des représentations lexicales, ils présentent une limitation majeure : chaque mot y est associé à un vecteur unique, quelle que soit sa signification dans le contexte. Cela pose problème pour les mots polysémiques ou ambigus, fréquents dans le langage naturel et particulièrement critiques en biomédecine.
+
+Pour pallier cette limite, les modèles récents s'appuient sur des architectures de type Transformer, capables de produire des représentations contextuelles dynamiques. Dans ces modèles, un même mot peut être représenté par des vecteurs différents selon le contexte dans lequel il apparaît.
+
+Dans cette section, nous explorons deux représentations contextuelles spécialement entraînées sur des corpus biomédicaux : \gls{biobert} et \gls{pubmedbert}. Ces modèles, basés sur l’architecture de \gls{bert}, capturent des nuances sémantiques essentielles pour des tâches complexes telles que l’extraction d’informations biomédicales, la classification de documents scientifiques, ou encore la normalisation de concepts médicaux.
+
+% Ici, développe BioBERT et PubMedBERT
+\subsection{PubMedBERT : Un modèle d'Embedding Contextuel optimisé pour les données biomédicales}
+
+L'Analyse et la compréhension automatiques du langage humain sont des éléments fondamentaux de l'\gls{ia} moderne, avec le \gls{tln} émergeant comme une discipline centrale qui s'appuie sur des modèles permettant de traiter les textes de manière sémantiquement riche et contextuellement précise. Parmi ces modèles, \gls{pubmedbert} se distingue comme un modèle d'embedding contextuel, spécialement conçu pour traiter des textes biomédicaux complexes \cite{lu2020pubmedbert}.
+
+\gls{pubmedbert} est une version de \gls{bert}, pré-entraînée sur un corpus spécifique aux publications biomédicales, principalement issues de la base de données PubMed \cite{lu2020pubmedbert}. Ce pré-entraînement sur un corpus spécialisé permet à \gls{pubmedbert} de mieux saisir les nuances sémantiques et syntaxiques du vocabulaire médical, ce qui le rend particulièrement adapté pour des tâches telles que la classification de textes biomédicaux et l'extraction d'information médicale \cite{lee2020biobert}.
+
+Contrairement aux embeddings statiques tels que \gls{glove} et FastText, où chaque mot est associé à un vecteur fixe indépendamment de son contexte, \gls{pubmedbert} génère des embeddings contextuels. Cela signifie qu'un même mot peut avoir différentes représentations vectorielles selon son usage dans le texte, permettant une meilleure gestion des ambiguïtés sémantiques, particulièrement pertinentes dans des domaines comme la biomédecine où les mots peuvent avoir des significations très spécifiques et contextuelles \cite{lu2020pubmedbert}.
+
+Les principaux avantages des embeddings contextuels, comme ceux fournis par \gls{pubmedbert}, sont les suivants :
+\begin{itemize}
+\item \textbf{Adaptabilité contextuelle :} Un même mot, selon le contexte où il apparaît, sera représenté par un vecteur différent, ce qui permet de mieux comprendre sa signification dans un contexte particulier.
+\item \textbf{Amélioration de la précision :} L'utilisation de \gls{pubmedbert} pour des tâches biomédicales, comme l'extraction d'informations ou la classification de textes, permet de capturer des relations complexes entre des concepts médicaux, ce qui augmente la précision des modèles de traitement de texte.
+\item \textbf{Capacité à traiter des textes spécialisés :} Grâce à son pré-entraînement sur des corpus biomédicaux, \gls{pubmedbert} est plus performant pour comprendre les nuances de la terminologie biomédicale.
+\end{itemize}
+
+Ces caractéristiques permettent à \gls{pubmedbert} de surpasser les modèles d'embeddings statiques dans des applications telles que la classification de textes biomédicaux, où la compréhension du contexte médical est cruciale. Par exemple, dans des tâches de classification de textes de PubMed, \gls{pubmedbert} peut distinguer les termes ayant des significations différentes dans divers contextes, rendant l’interprétation des textes scientifiques plus robuste et précise.
+
+\medskip
+
+En comparaison, BioBERT propose également une approche similaire pour le traitement de textes biomédicaux, bien que son pré-entraînement ait été effectué sur un ensemble de données légèrement différent, incluant des articles biomédicaux d'autres sources. Cette différence de corpus de pré-entraînement a mené à des résultats spécifiques qui soulignent l'importance de la spécialisation des modèles dans le domaine biomédical. Nous allons maintenant explorer en détail BioBERT et ses applications spécifiques dans le domaine de l'analyse de texte biomédical.
+
+\subsection{BioBERT : Un modèle d'Embedding Contextuel adapté aux données biomédicales}
+
+BioBERT, tout comme PubMedBERT, est un modèle d'embedding contextuel pré-entraîné spécifiquement pour le domaine biomédical. Développé par Lee et al. \cite{lee2020biobert}, BioBERT s'appuie sur l'architecture BERT \cite{devlin2019bert}, mais il se distingue par son pré-entraînement sur un large corpus de textes biomédicaux, comprenant des articles scientifiques et des documents médicaux provenant de diverses bases de données, dont PubMed et PMC (PubMed Central). Cette spécialisation permet à BioBERT de mieux appréhender les spécificités du vocabulaire biomédical, ce qui en fait un outil précieux pour des applications telles que l'extraction d'information médicale, la classification de documents biomédicaux, et la normalisation de concepts médicaux.
+
+\gls{biobert} surmonte également la limitation des embeddings statiques en produisant des représentations vectorielles contextuelles. Cela permet de traiter des mots ayant plusieurs significations selon leur contexte. Par exemple, le terme "cellule" en biologie cellulaire peut avoir une signification très différente de celle qu'il peut avoir en tant qu'unité de stockage d'information dans le domaine de l'informatique. Grâce à son approche contextuelle, BioBERT peut différencier ces usages et fournir une meilleure représentation des concepts en fonction du contexte.
+
+Les principaux avantages de BioBERT pour les tâches biomédicales incluent :
+
+\begin{itemize}
+\item \textbf{Amélioration de la compréhension du vocabulaire biomédical :} Le pré-entraînement sur un large corpus médical permet à BioBERT de capturer les subtilités des termes spécialisés et des relations entre concepts biomédicaux.
+\item \textbf{Efficacité pour les tâches biomédicales complexes :} BioBERT a montré de bons résultats dans plusieurs benchmarks pour des tâches telles que l'extraction d'entités biomédicales, la réponse à des questions médicales, et la classification de textes médicaux \cite{lee2020biobert}.
+\item \textbf{Capacité à générer des représentations dynamiques :} Comme PubMedBERT, BioBERT produit des embeddings qui varient en fonction du contexte du mot dans un texte, ce qui est crucial dans le domaine biomédical où les mêmes termes peuvent avoir des significations différentes.
+\end{itemize}
+
+Les résultats de BioBERT dans des tâches de traitement du langage biomédical sont impressionnants, et il a surpassé plusieurs modèles précédents, y compris des versions standard de BERT non spécialisées. BioBERT a ainsi démontré sa capacité à générer des représentations contextuelles particulièrement adaptées à des tâches telles que la recherche d'informations médicales et la compréhension de textes biomédicaux.
+
+Bien que PubMedBERT et BioBERT partagent de nombreuses similarités, notamment leur base BERT et leur approche contextuelle, il existe des différences notables en termes de corpus de pré-entraînement et d'applications spécifiques. PubMedBERT, par exemple, se concentre spécifiquement sur les résumés d'articles PubMed, tandis que BioBERT utilise une base de données plus variée, comprenant des articles médicaux issus de multiples sources.
+
+En conclusion, BioBERT représente un modèle de plus en plus essentiel pour les chercheurs travaillant sur des données biomédicales, offrant des performances exceptionnelles dans diverses tâches complexes. Il sera intéressant de comparer les résultats de BioBERT et PubMedBERT pour déterminer quel modèle s'avère le plus performant selon les tâches spécifiques en biomédecine.
+
+\section{Visualisation des représentations des données avec t-SNE}
+\label{sec:tsne}
+
+La visualisation des représentations vectorielles est une étape importante pour mieux comprendre comment un modèle de traitement du langage naturel apprend à distinguer les différentes classes à partir des données textuelles. Dans ce projet, nous utilisons l’algorithme \gls{tsne}~\cite{van2008visualizing} afin de projeter des vecteurs de haute dimension dans un espace bidimensionnel pour une visualisation intuitive.
+
+Appliqué à différentes étapes du pipeline, \gls{tsne} permet d’obtenir une représentation visuelle des données telles qu’elles sont perçues par le modèle — que ce soit à l’entrée (par exemple, les embeddings de type \gls{glove} ou \gls{biobert}) ou à travers les activations intermédiaires après passage dans les couches du modèle (\gls{lstm}, attention, etc.).
+
+L’interprétation des projections \gls{tsne} repose sur la conservation de la structure locale des données. En d’autres termes, si deux points sont proches dans l’espace projeté, ils étaient probablement aussi proches dans l’espace original à haute dimension. Ainsi, une bonne séparation visuelle entre groupes (ou classes) dans la carte \gls{tsne} peut indiquer que le modèle a appris des représentations discriminantes. À l’inverse, un chevauchement important peut signaler que les classes sont peu séparables dans l’espace appris, ce qui peut se traduire par des erreurs de classification.
+
+Dans le cadre de ce travail, \gls{tsne} nous a permis de :
+\begin{itemize}
+    \item visualiser les regroupements de données issus de différentes classes ;
+    \item identifier des zones de confusion potentielle entre classes (chevauchement) ;
+    \item observer l'évolution des représentations apprises par le modèle au cours de l'entraînement.
+\end{itemize}
+
+Cette visualisation n’est pas simplement illustrative : elle offre une lecture qualitative du comportement du modèle et peut orienter des choix méthodologiques, par exemple en suggérant l’introduction de techniques de rééquilibrage ou l’ajustement de l’architecture si les classes restent difficilement séparables.
+
+\section{Métriques d’évaluation pour la classification de textes biomédicaux}
+
+Dans le cadre de la classification de textes, en particulier dans des domaines spécialisés comme la biomédecine, le choix des métriques d’évaluation est crucial pour mesurer de manière fiable les performances des modèles. Comme l’ont souligné Saito et al.~\cite{saito2015precision}, les métriques traditionnelles comme l’\textbf{accuracy} peuvent être trompeuses dans des contextes de déséquilibre de classes, ce qui est fréquent en biomédecine ou en apprentissage avec peu d’exemples.
+
+L’\textbf{accuracy}, définie comme le rapport entre les prédictions correctes et le nombre total de prédictions, reste la métrique la plus utilisée. Toutefois, son efficacité diminue fortement en cas de classes déséquilibrées. Comme l’ont noté Japkowicz et Stephen~\cite{japkowicz2002class}, un modèle peut obtenir une accuracy élevée simplement en prédisant la classe majoritaire, sans réellement apprendre à discriminer les classes minoritaires.
+
+Pour remédier à ces limites, la \textbf{balanced accuracy} a été introduite comme alternative plus équitable. Elle est définie comme la moyenne des rappels (\textit{recall}) pour chaque classe, permettant ainsi une évaluation robuste, même lorsque certaines classes sont fortement sous-représentées~\cite{brodersen2010balanced}.
+
+La \textbf{precision} et le \textbf{recall} sont deux métriques complémentaires : la première mesure la proportion de vrais positifs parmi les prédictions positives, tandis que la seconde mesure la proportion de vrais positifs correctement identifiés parmi tous les éléments réellement positifs. Le \textbf{F1-score}, leur moyenne harmonique, est recommandé dans les travaux récents sur la classification de textes en contexte médical, notamment par Jin et al.~\cite{jin2019recurrent}, car il pénalise les déséquilibres entre précision et rappel. 
+
+Enfin l'\gls{auc} (Area Under the Curve), et plus précisément l’AUC-ROC (Receiver Operating Characteristic), est une métrique utilisée pour évaluer la capacité d’un modèle à distinguer entre les classes positives et négatives. Elle mesure l’aire sous la courbe ROC, qui trace le taux de vrais positifs en fonction du taux de faux positifs. Une AUC proche de 1 indique un excellent pouvoir discriminant, tandis qu’une AUC de 0{,}5 correspond à une performance aléatoire. Comme l’ont montré Saito et Rehmsmeier~\cite{saito2015precision}, dans les contextes de fort déséquilibre de classes – comme en biomédecine –, l’AUC-PR (Precision-Recall) est souvent plus informative que l’AUC-ROC, car elle se concentre davantage sur les performances en ce qui concerne la classe positive rare.
+
+\section{L'apprentissage par petites touches dans le cadre du TAL : définitions, méthodes et défis}
+
+L'apprentissage par petites touches (ou Few-Shot Learning, FSL) représente une approche où les modèles doivent apprendre efficacement à partir de seulement quelques exemples par classe, un scénario couramment rencontré dans des contextes où il est difficile d'obtenir une quantité suffisante de données annotées. Cette approche est particulièrement utile en TAL (Traitement Automatique des Langues), où les jeux de données peuvent être rares ou difficiles à annoter manuellement, comme dans les applications spécifiques à des domaines tels que la biomédecine ou le droit.
+
+Les métriques utilisées pour évaluer les performances des modèles dans ce contexte, notamment l'\textbf{accuracy}, la \textbf{balanced accuracy}, la \textbf{precision}, le \textbf{recall}, le \textbf{F1-score} et l'\gls{auc}, sont particulièrement pertinentes, car elles permettent d'évaluer la capacité du modèle à s'adapter à de nouvelles classes avec peu d'exemples d'entraînement. En particulier, la \textbf{balanced accuracy} permet de surmonter les limitations de l'\textbf{accuracy} classique, souvent biaisée dans le cas de classes déséquilibrées, comme c'est souvent le cas dans les jeux de données en FSL. Les autres métriques comme le \textbf{F1-score}, la \textbf{precision} et le \textbf{recall} aident à quantifier les performances du modèle en termes de détection correcte des classes minoritaires, ce qui est essentiel dans les scénarios de \gls{fsl}. L'\gls{auc} (Area Under the Curve) est également utile pour évaluer la capacité du modèle à discriminer les différentes classes.
+
+\subsection{Définitions et Concepts}
+
+L'apprentissage par petites touches repose sur l'idée qu'un modèle peut apprendre des tâches complexes en utilisant très peu d'exemples. Cette capacité est essentielle pour surmonter les limitations des méthodes traditionnelles qui nécessitent de grandes quantités de données annotées pour obtenir de bonnes performances. Dans ce cadre, un k-shot se réfère au nombre d'exemples utilisés par classe pour entraîner un modèle. Par exemple, dans le cadre d'un problème de 5-shot learning, le modèle est entraîné avec cinq exemples par classe.
+
+L'un des concepts clés du \gls{fsl} est la capacité des modèles à généraliser à partir de peu d'exemples. Cela nécessite de fortes capacités d'abstraction et de transfert de connaissances acquises lors de pré-entraînements sur des jeux de données plus larges, comme le montrent les travaux sur les architectures basées sur \gls{bert} et ses variantes \cite{devlin2019bert, lee2020biobert, lu2020pubmedbert}.
+
+\subsection{Méthodes et Techniques}
+
+Les méthodes de \gls{fsl} en TAL incluent des approches telles que le meta-learning (apprentissage de l'apprentissage), qui permet aux modèles de se former rapidement sur de nouvelles tâches avec peu d'exemples. Des techniques comme Matching Networks \cite{vinyals2016matching}, Prototypical Networks \cite{snell2017prototypical} et MAML (Model-Agnostic Meta-Learning) \cite{finn2017model} sont couramment utilisées. Ces méthodes se basent sur des mécanismes permettant au modèle d'apprendre à partir de peu d'exemples, en optimisant la capacité à adapter rapidement le modèle à de nouvelles tâches.
+
+Les Transformers comme \gls{bert} \cite{devlin2019bert} et ses dérivés, tels que \gls{biobert} \cite{lee2020biobert} ou \gls{pubmedbert} \cite{lu2020pubmedbert}, ont été particulièrement efficaces dans les tâches de \gls{fsl} en TAL, car ils sont capables de capturer des représentations contextuelles riches et adaptatives. Ces modèles sont souvent pré-entraînés sur de vastes corpus et sont ensuite adaptés (fine-tunés) pour des tâches spécifiques avec peu d'exemples.
+
+Les métriques de performance utilisées pour évaluer ces modèles, telles que la \textbf{precision}, le \textbf{recall}, le \textbf{F1-score}, la \textbf{balanced accuracy}, et l'\gls{auc}, sont particulièrement pertinentes dans le contexte du \gls{fsl}. Elles permettent d'évaluer la capacité des modèles à bien distinguer les classes avec peu d'exemples, ce qui est un défi majeur de cette approche.
+
+\subsection{Défis de l'Apprentissage par Petites Touches}
+
+L'un des défis majeurs de l'apprentissage par petites touches est la généralisation. Le modèle doit être capable de faire des prédictions fiables malgré le nombre limité d'exemples d'entraînement. Cette difficulté est accentuée dans des domaines spécifiques comme la biomédecine, où la richesse sémantique et la polysémie des termes rendent le modèle susceptible de faire des erreurs si le contexte n'est pas bien compris \cite{jin2019recurrent, zhang2020biowordvec}. Les techniques telles que l'entraînement multitâche et le transfert d'apprentissage peuvent aider à surmonter ces obstacles en tirant parti de l'information présente dans des tâches ou des domaines similaires.
+
+Le contraste entre les classes dans un jeu de données de Few-Shot peut également être un défi. Les modèles doivent être capables de distinguer des exemples très similaires tout en étant robustes aux variations dans les données d'entrée. Des approches comme l'augmentation de données et des techniques de régularisation peuvent être utiles pour améliorer la robustesse des modèles en \gls{fsl}. De plus, l'utilisation appropriée des métriques, comme la \textbf{balanced accuracy} et le \textbf{F1-score}, devient cruciale pour évaluer correctement ces modèles dans des contextes où les classes peuvent être déséquilibrées.
+
+\section{Problèmes de déséquilibre des classes et techniques d’adaptation}
+\label{sec:class-imbalance}
+
+Le déséquilibre des classes est un problème fréquent dans la classification de textes biomédicaux, où certaines classes sont surreprésentées tandis que d’autres, souvent plus rares mais cliniquement importantes, sont sous-représentées. Cette disparité peut fortement biaiser l’apprentissage du modèle, qui tend alors à privilégier la classe majoritaire au détriment de la précision sur les classes minoritaires. Pour y remédier, plusieurs techniques d’adaptation ont été développées, parmi lesquelles des méthodes de rééchantillonnage et des stratégies de pondération des classes dans la fonction de perte. Ces techniques sont particulièrement pertinentes dans des contextes à faible volume de données ou à fort déséquilibre, comme en biomédecine.
+\subsection{Méthodes de rééchantillonnage}
+
+Les méthodes de rééchantillonnage visent à modifier la distribution des données afin de compenser le déséquilibre entre les classes. On distingue principalement deux approches :
+\begin{itemize}
+    \item le \textbf{suréchantillonnage}, qui augmente artificiellement la proportion des exemples minoritaires ;
+    \item le \textbf{sous-échantillonnage}, qui réduit la taille des classes majoritaires pour équilibrer la distribution.
+\end{itemize}
+
+Bien que les deux types de méthodes soient couramment utilisés dans la littérature, notre projet se concentre exclusivement sur les techniques de \textbf{suréchantillonnage}. Ce choix repose sur une revue d’articles spécialisés dans l’apprentissage sur données déséquilibrées, notamment dans le domaine biomédical, où la conservation des données majoritaires est souvent cruciale pour préserver la richesse des cas cliniques. Par ailleurs, les méthodes de suréchantillonnage permettent d’enrichir la classe minoritaire sans altérer la structure globale du jeu de données.
+
+Parmi les approches de suréchantillonnage, nous avons retenu deux techniques largement reconnues : \textbf{SMOTE} (Synthetic Minority Over-sampling Technique)~\cite{chawla2002smote} et sa variante \textbf{Borderline-SMOTE}~\cite{han2005borderline}. Ces méthodes ont démontré leur efficacité dans plusieurs études pour améliorer la performance des modèles sur des jeux de données fortement déséquilibrés.
+
+\subsubsection{\gls{smote} — \textbf{Synthetic Minority Over-sampling Technique}}
+
+\gls{smote}~\cite{chawla2002smote} est une méthode de suréchantillonnage qui génère de nouveaux exemples synthétiques pour la classe minoritaire en interpolant entre des points proches dans l’espace des caractéristiques. Cette approche est particulièrement utile dans les jeux de données biomédicaux où les exemples minoritaires sont rares, car elle permet d’enrichir ces classes sans simplement dupliquer les exemples existants, ce qui réduit le risque de surapprentissage.
+
+Contrairement aux techniques de suréchantillonnage naïves, comme la duplication aléatoire, SMOTE améliore la généralisation du modèle en introduisant une variabilité contrôlée dans les données. Les exemples synthétiques sont créés en sélectionnant aléatoirement un voisin parmi les $k$ plus proches voisins d’un échantillon minoritaire, puis en interpolant linéairement entre les deux. Cette stratégie permet de mieux définir les frontières de décision dans des régions de l’espace des caractéristiques où la densité d’échantillons est faible.
+
+Le principe de SMOTE est illustré dans la Figure~\ref{fig:smote_algo}, qui présente l'algorithme sous forme de pseudocode. Celui-ci détaille les étapes de génération d'exemples synthétiques par interpolation aléatoire entre un échantillon minoritaire et ses voisins les plus proches. Cette méthode peut être combinée à d’autres techniques, comme le sous-échantillonnage de la classe majoritaire ou la pondération de la fonction de perte, afin d’optimiser les performances sur des jeux de données déséquilibrés.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{smote.png}
+    \caption{Algorithme SMOTE : génération d'exemples synthétiques à partir des voisins proches d'une instance minoritaire. Adapté de \cite{chawla2002smote}.}
+    \label{fig:smote_algo}
+\end{figure}
+
+\subsubsection{Borderline-SMOTE}
+
+\textit{Borderline-SMOTE}~\cite{han2005borderline} est une variante de \gls{smote} qui cible spécifiquement les exemples situés à proximité des frontières de décision, c’est-à-dire les zones les plus susceptibles d’entraîner des erreurs de classification. Dans les applications sensibles comme le diagnostic médical, où les erreurs sur des cas ambigus peuvent être critiques, cette méthode renforce la capacité du modèle à discriminer correctement les classes dans les situations les plus complexes. Elle fonctionne en identifiant les échantillons minoritaires qui sont entourés de nombreux exemples de la classe majoritaire (situations "borderline") et en générant de nouveaux exemples à partir de ceux-là, afin de densifier ces zones critiques de l’espace de décision.
+
+\section{Pondération des classes dans la fonction de perte}
+
+La pondération des classes dans la fonction de perte est une méthode utilisée pour compenser le déséquilibre des classes en attribuant un poids plus élevé aux classes minoritaires. Cette approche permet de corriger le biais induit par un déséquilibre des classes sans altérer les données elles-mêmes. Elle est particulièrement utile dans les domaines où certaines classes sont cliniquement importantes mais sous-représentées, comme en biomédecine \cite{Chawla2002SMOTE} ou en science politique \cite{King2001Logit}.
+
+Soit $y_i$ l'étiquette réelle de l'échantillon $i$, et $\hat{y}_i$ la prédiction du modèle pour cet échantillon. La fonction de perte classique pour une classification binaire (par exemple, l'entropie croisée) est donnée par :
+
+$$
+\mathcal{L}_\text{classique} = - \sum_{i=1}^{N} \left[ y_i \log(\hat{y}_i) + (1 - y_i) \log(1 - \hat{y}_i) \right]
+$$
+
+Cependant, dans le cas de classes déséquilibrées, cette fonction de perte peut entraîner un modèle qui favorise la classe majoritaire. Pour résoudre ce problème, on modifie cette fonction de perte en attribuant des poids $w_1$ et $w_0$ aux classes 1 et 0, respectivement. La fonction de perte pondérée devient alors :
+
+$$
+\mathcal{L}_\text{pondérée} = - \sum_{i=1}^{N} \left[ w_1 \cdot y_i \log(\hat{y}_i) + w_0 \cdot (1 - y_i) \log(1 - \hat{y}_i) \right]
+$$
+
+où $w_1$ et $w_0$ sont les poids associés respectivement aux classes 1 et 0. Ces poids peuvent être définis en fonction de la fréquence des classes dans le jeu de données. 
+
+
+\vspace{1em}
+Dans un problème multi-classe, chaque étiquette $y_i$ appartient à l'une des classes possibles, disons $C = \{1, 2, \dots, K\}$, où $K$ est le nombre total de classes. Le modèle prédit une probabilité $\hat{y}_i$ pour chaque classe $k$, c'est-à-dire $\hat{y}_i = P(\hat{y} = k | x_i)$ \cite{Han2005Borderline}.
+
+La fonction de perte classique pour la classification multi-classe, telle que l'entropie croisée, est donnée par :
+
+$$
+\mathcal{L}_\text{classique} = - \sum_{i=1}^{N} \sum_{k=1}^{K} y_{ik} \log(\hat{y}_{ik})
+$$
+
+où $y_{ik}$ est l'étiquette binaire pour l'échantillon $i$ et la classe $k$ (soit 1 si $x_i$ appartient à la classe $k$, sinon 0), et $\hat{y}_{ik}$ est la probabilité prédite pour cette classe.
+
+Pour adapter la fonction de perte au déséquilibre des classes dans un cadre multi-classe, on attribue un poids $w_k$ à chaque classe $k$. La fonction de perte pondérée devient alors :
+
+$$
+\mathcal{L}_\text{pondérée} = - \sum_{i=1}^{N} \sum_{k=1}^{K} w_k \cdot y_{ik} \log(\hat{y}_{ik})
+$$
+
+où $w_k$ est le poids associé à la classe $k$.
+
+Comme pour le cas binaire, ces poids peuvent être définis de manière inversement proportionnelle à la fréquence des classes dans le jeu de données. Les poids peuvent être calculés de différentes manières, en fonction du déséquilibre des classes. 
+
+La perte focale, proposée par Lin et al. \cite{Lin2017Focal}, cette méthode introduit un facteur de modulation pour focaliser l'apprentissage sur les exemples difficiles à classer, tout en conservant une pondération selon la classe :
+$$
+\mathcal{L}_\text{focal} = - \sum_{i=1}^{N} \sum_{k=1}^{K} w_k \cdot (1 - \hat{y}_{ik})^\gamma \cdot y_{ik} \log(\hat{y}_{ik})
+$$
+où $\gamma$ est un paramètre de focalisation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -287,33 +633,27 @@ Cette architecture compacte permet aux \gls{gru} de s’adapter efficacement aux
 \newpage
 \begin{thebibliography}{99}
 
-\bibitem{devlin2019bert}
-J. Devlin, M. W. Chang, K. Lee, and K. Toutanova, 
-\textit{BERT: Pre-training of deep bidirectional transformers for language understanding}, 
-NAACL-HLT 2019, pp. 4171–4186, 2019. 
-\url{https://arxiv.org/abs/1810.04805}
+\bibitem{bahdanau2015neural}
+D. Bahdanau, K. Cho, and Y. Bengio, 
+\textit{Neural Machine Translation by Jointly Learning to Align and Translate}, 
+International Conference on Learning Representations (ICLR), 2015. 
+\url{https://arxiv.org/abs/1409.0473}
 
-\bibitem{lee2020biobert}
-J. Lee, W. Yoon, S. Kim, D. Kim, and C. H. So, 
-\textit{BioBERT: A pre-trained biomedical language representation model for biomedical text mining}, 
-Bioinformatics, vol. 36, no. 4, pp. 1234–1240, 2020. 
-\url{https://doi.org/10.1093/bioinformatics/btz682}
+\bibitem{bengio1994learning}
+Y. Bengio, et al., 
+\textit{Learning long-term dependencies with gradient descent is difficult}, 
+IEEE Transactions on Neural Networks, vol. 5, no. 2, pp. 157–166, 1994.
 
-\bibitem{gupta2021pubmedbert}
-A. Gupta and A. Agarwal, 
-\textit{PubMedBERT: A pre-trained biomedical language representation model for PubMed abstracts}, 
-arXiv preprint arXiv:2102.09714, 2021. 
-\url{https://arxiv.org/abs/2102.09714}
+\bibitem{bojanowski2017enriching}
+P. Bojanowski, E. Grave, A. Joulin, and T. Mikolov, 
+\textit{Enriching word vectors with subword information}, 
+Transactions of the Association for Computational Linguistics, vol. 5, pp. 135–146, 2017. 
+\url{https://aclanthology.org/Q17-1010/}
 
-\bibitem{mikolov2010recurrent}
-T. Mikolov, M. Karafiát, L. Burget, J. Černocký, and S. Khudanpur, 
-\textit{Recurrent neural network based language model}, 
-In Interspeech, vol. 2, pp. 1045–1048, 2010.
-
-\bibitem{hochreiter1997long}
-S. Hochreiter and J. Schmidhuber, 
-\textit{Long short-term memory}, 
-Neural Computation, vol. 9, no. 8, pp. 1735–1780, 1997.
+\bibitem{brodersen2010balanced}
+K. H. Brodersen, C. S. Ong, K. E. Stephan, and J. M. Buhmann, 
+\textit{The balanced accuracy and its posterior distribution}, 
+20th International Conference on Pattern Recognition, 2010.
 
 \bibitem{cho2014learning}
 K. Cho, B. van Merriënboer, D. Bahdanau, and Y. Bengio, 
@@ -321,16 +661,94 @@ K. Cho, B. van Merriënboer, D. Bahdanau, and Y. Bengio,
 arXiv preprint arXiv:1406.1078, 2014. 
 \url{https://arxiv.org/abs/1406.1078}
 
-\bibitem{yin2017comparative}
-W. Yin, K. Kann, M. Yu, and H. Schütze, 
-\textit{Comparative study of CNN and RNN for natural language processing}, 
-arXiv preprint arXiv:1702.01923, 2017. 
-\url{https://arxiv.org/abs/1702.01923}
+\bibitem{devlin2019bert}
+J. Devlin, M. W. Chang, K. Lee, and K. Toutanova, 
+\textit{BERT: Pre-training of deep bidirectional transformers for language understanding}, 
+NAACL-HLT 2019, pp. 4171–4186, 2019. 
+\url{https://arxiv.org/abs/1810.04805}
+
+\bibitem{elman1990finding}
+J. L. Elman, 
+\textit{Finding structure in time}, 
+Cognitive Science, vol. 14, no. 2, pp. 179–211, 1990.
+
+\bibitem{finn2017model}
+C. Finn, P. Abbeel, and S. Levine, 
+\textit{Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks}, 
+ICML 2017, pp. 1126–1135, 2017. 
+\url{https://arxiv.org/abs/1703.03400}
+
+\bibitem{gupta2021pubmedbert}
+A. Gupta and A. Agarwal, 
+\textit{PubMedBERT: A pre-trained biomedical language representation model for PubMed abstracts}, 
+arXiv preprint arXiv:2102.09714, 2021. 
+\url{https://arxiv.org/abs/2102.09714}
+
+\bibitem{he2009learning}
+H. He, X. L. Chen, and D. W. Song, 
+\textit{Learning from imbalanced data}, 
+Proceedings of the IEEE International Conference on Data Mining, 2009.
+
+\bibitem{hochreiter1997long}
+S. Hochreiter and J. Schmidhuber, 
+\textit{Long short-term memory}, 
+Neural Computation, vol. 9, no. 8, pp. 1735–1780, 1997.
+
+\bibitem{lu2020pubmedbert}
+Z. Lu et al., 
+\textit{PubMedBERT: Pre-trained language model for biomedical text mining}, 
+[Journal/Conference], 2020. 
+\url{https://arxiv.org/abs/2007.XXX}
+
+\bibitem{jia2019deep}
+L. Jia, et al., 
+\textit{Deep learning for medical text mining: A survey}, 
+Journal of Biomedical Informatics, vol. 96, pp. 103–118, 2019.
 
 \bibitem{jin2019recurrent}
 Q. Jin, B. Dhingra, X. Liu, W. Cohen, and E. Hovy, 
 \textit{Recurrent neural network models for disease name recognition using domain-invariant features}, 
 In Proceedings of the BioNLP 2019 Workshop, pp. 1–10, 2019.
+
+\bibitem{lee2020biobert}
+J. Lee, W. Yoon, S. Kim, D. Kim, and C. H. So, 
+\textit{BioBERT: A pre-trained biomedical language representation model for biomedical text mining}, 
+Bioinformatics, vol. 36, no. 4, pp. 1234–1240, 2020. 
+\url{https://doi.org/10.1093/bioinformatics/btz682}
+
+\bibitem{mikolov2010recurrent}
+T. Mikolov, M. Karafiát, L. Burget, J. Černocký, and S. Khudanpur, 
+\textit{Recurrent neural network based language model}, 
+In Interspeech, vol. 2, pp. 1045–1048, 2010.
+
+\bibitem{mikolov2018advances}
+T. Mikolov and others, 
+\textit{Advances in pretraining models}, 
+Journal of Machine Learning, vol. 10, pp. 1–10, 2018.
+
+\bibitem{pennington2014glove}
+J. Pennington, R. Socher, and C. D. Manning, 
+\textit{GloVe: Global Vectors for Word Representation}, 
+In Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP), pp. 1532–1543, 2014. 
+\url{https://aclanthology.org/D14-1162/}
+
+\bibitem{snell2017prototypical}
+J. Snell, K. Swersky, and R. Zemel, 
+\textit{Prototypical Networks for Few-shot Learning}, 
+NeurIPS 2017, pp. 4077–4087, 2017. 
+\url{https://arxiv.org/abs/1703.05175}
+
+\bibitem{vinyals2016matching}
+O. Vinyals, C. Blundell, T. Lillicrap, D. Wierstra, and D. Silver, 
+\textit{Matching Networks for One-Shot Learning}, 
+NeurIPS 2016, pp. 3630–3638, 2016. 
+\url{https://arxiv.org/abs/1606.04080}
+
+\bibitem{yin2017comparative}
+W. Yin, K. Kann, M. Yu, and H. Schütze, 
+\textit{Comparative study of CNN and RNN for natural language processing}, 
+arXiv preprint arXiv:1702.01923, 2017. 
+\url{https://arxiv.org/abs/1702.01923}
 
 \bibitem{zhang2020biowordvec}
 Y. Zhang, Q. Chen, Z. Yang, H. Lin, and Z. Lu, 
@@ -338,44 +756,58 @@ Y. Zhang, Q. Chen, Z. Yang, H. Lin, and Z. Lu,
 Scientific Data, vol. 6, no. 52, 2020. 
 \url{https://doi.org/10.1038/s41597-019-0055-0}
 
-\bibitem{elman1990finding}
-J. L. Elman, "Finding structure in time," \textit{Cognitive Science}, vol. 14, no. 2, pp. 179-211, 1990.
+\bibitem{saito2015precision}
+T. Saito and M. Rehmsmeier, 
+\textit{The Precision-Recall Plot is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets}, 
+PLOS ONE, vol. 10, no. 3, 2015.
 
-\bibitem{mikolov2010recurrent_2}
-T. Mikolov, et al., "Recurrent neural network based language model," \textit{Proceedings of the 11th Annual Conference of the International Speech Communication Association}, 2010.
+\bibitem{japkowicz2002class}
+N. Japkowicz and S. Stephen, 
+\textit{The class imbalance problem: A systematic study}, 
+Intelligent Data Analysis, vol. 6, no. 5, pp. 429–449, 2002.
 
-\bibitem{bengio1994learning}
-Y. Bengio, et al., "Learning long-term dependencies with gradient descent is difficult," \textit{IEEE Transactions on Neural Networks}, vol. 5, no. 2, pp. 157-166, 1994.
+\bibitem{chawla2002smote}
+Chawla, N.V., Bowyer, K.W., Hall, L.O., \& Kegelmeyer, W.P. (2002).
+SMOTE: Synthetic Minority Over-sampling Technique.
+\textit{Journal of Artificial Intelligence Research}, \textbf{16}, 321--357.
 
-\bibitem{jia2019deep}
-L. Jia, et al., "Deep learning for medical text mining: A survey," \textit{Journal of Biomedical Informatics}, vol. 96, pp. 103-118, 2019.
+\bibitem{han2005borderline}
+Han, H., Wang, W.Y., \& Mao, B.H. (2005).
+Borderline-SMOTE: A New Over-Sampling Method in Imbalanced Data Sets Learning.
+In \textit{Proceedings of the International Conference on Intelligent Computing}, Springer, 878--887.
 
-\bibitem{mikolov2018advances}
-T. Mikolov and others, 
-\textit{Advances in pretraining models}, 
-Journal of Machine Learning, vol. 10, pp. 1–10, 2018.
+\bibitem{Chawla2002SMOTE} Chawla, N. V., \textit{SMOTE: Synthetic Minority Over-sampling Technique}, Journal of Artificial Intelligence Research, 2002.
 
-\bibitem{cho2014learning}
-Cho, K., van Merriënboer, B., Bahdanau, D., \& Bengio, Y. (2014).
-\textit{Learning phrase representations using RNN encoder-decoder for statistical machine translation}.
-arXiv preprint arXiv:1406.1078.
+\bibitem{Han2005Borderline} Han, H., Wang, W. Y., and Mao, B. H., \textit{Borderline-SMOTE: A New Over-Sampling Method in Imbalanced Data Sets Learning}, Proceedings of the International Conference on Intelligent Computing, 2005.
+
+\bibitem{King2001Logit}
+G. King and L. Zeng, 
+\textit{Logistic Regression in Rare Events Data}, 
+Political Analysis, vol. 9, no. 2, pp. 137–163, 2001.
+
+\bibitem{Lin2017Focal}
+T.-Y. Lin, P. Goyal, R. Girshick, K. He, and P. Dollár,
+\textit{Focal Loss for Dense Object Detection}, 
+Proceedings of the IEEE International Conference on Computer Vision (ICCV), pp. 2980–2988, 2017.
+
+\bibitem{van2008visualizing}
+L.J.P. van der Maaten and G.E. Hinton,
+\textit{Visualizing data using t-SNE},
+Journal of Machine Learning Research, vol. 9, pp. 2579–2605, 2008.
 
 
 
 
-\bibitem{source_image}
-\textit{Architecture des Réseaux de Neurones Récurrents}, 
-Disponible sur: \url{https://miro.medium.com/v2/resize:fit:660/1*uLTBA8Myf6_IwtpfLr4Xpg.png}, 
-Accédé le 9 mai 2025.
 
-\bibitem{source_lstm_image}
-\textit{Logique de l'architecture LSTM}, 
-Disponible sur: \url{https://sl.bing.net/bWWTQ1HkC7M}, 
-Consulté le 9 mai 2025.
 
-\bibitem{source_gru_image}
-\textit{Illustration de l'unité récurrente convolutive (GRU)}, 
-disponible en ligne : \url{https://sl.bing.net/eY21glZpxUO}, consulté en mai 2025.
+
+
+
+
+
+
+
+
 
 
 
@@ -388,8 +820,9 @@ disponible en ligne : \url{https://sl.bing.net/eY21glZpxUO}, consulté en mai 20
 
 
 \end{thebibliography}
-
 \end{document}
 -------------------------------------------------------------------------------------------------------------------------------
+
+
 
 
