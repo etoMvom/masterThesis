@@ -922,7 +922,7 @@ Pour ces raisons, nous présentons séparément les expérimentations liées à 
 
 \subsection{Résultats expérimentaux de la classification binaire}
 
-\subsubsection{Performances des modèles LSTM etGRU avec embeddings appris depuis zéro }
+\subsubsection{Performances des modèles LSTM et GRU avec embeddings appris depuis zéro}
 
 Les performances des modèles LSTM et GRU, entraînés avec des embeddings appris depuis zéro à partir du texte brut, sont résumées dans le tableau suivant :
 
@@ -932,38 +932,119 @@ Les performances des modèles LSTM et GRU, entraînés avec des embeddings appri
 \resizebox{1.05\textwidth}{!}{%
 \begin{tabular}{|l|l|c|c|c|c|c|c|c|}
 \hline
-\textbf{Model} & \textbf{Embedding Type} & \textbf{Balanced Acc} & \textbf{F1 Score} & \textbf{Precision} & \textbf{Recall} & \textbf{AUC} & \textbf{Inf. Time (s)} & \textbf{Train Time (min)} \\
+\textbf{Modèle} & \textbf{Type d'Embedding} & \textbf{Balanced Acc} & \textbf{F1 Score} & \textbf{Précision} & \textbf{Rappel} & \textbf{AUC} & \textbf{Temps Inf. (s)} & \textbf{Temps Appr. (min)} \\
 \hline
-LSTM & Learned (from scratch, Raw Text, 200d) & 89.50\% & 84.60\% & 75.66\% & 95.94\% & 0.92 & 0.05 & 0.44 \\
+LSTM & Learned (from scratch, Raw Text, 200d) & 89.50\% & 84.60\% & 75.66\% & \textbf{95.94\%} & 0.92 & 0.05 & 0.44 \\
 \hline
-GRU & Learned (from scratch, Raw Text, 200d) & 90.69\% & 87.11\% & 82.92\% & 91.74\% & 0.96 & \textbf{0.04} & \textbf{0.37} \\
+GRU & Learned (from scratch, Raw Text, 200d) & \textbf{90.69\%} & \textbf{87.11\%} & \textbf{82.92\%} & 91.74\% & \textbf{0.96} & \textbf{0.04} & \textbf{0.37} \\
 \hline
 \end{tabular}
 }
 \caption{Résultats obtenus pour la classification binaire avec embeddings appris depuis zéro sur l'ensemble de test.}
-\label{tab:model_performance}
+\label{tab:model_performance_scratch}
 \end{table}
 
-Ces résultats indiquent que le modèle GRU surpasse légèrement le LSTM sur toutes les métriques, en particulier en précision (\textit{precision}), F1 score et AUC. De plus, il présente un temps d’inférence et d’entraînement légèrement inférieur, ce qui en fait une architecture plus efficace dans ce contexte.
+Ces performances ont été obtenues après une phase d’optimisation des hyperparamètres sur l’ensemble de validation. Les meilleures configurations identifiées pour chaque modèle sont présentées dans le tableau placé en annexe (\autoref{tab:model-config}).
 
-Ces performances confirment la capacité des modèles RNN à capturer efficacement la structure du langage biomédical même à partir d’embeddings non pré-entraînés, bien que leur efficacité puisse être encore améliorée par l'intégration d'embeddings spécialisés.
+Ces résultats montrent que le modèle GRU surpasse légèrement le LSTM sur l’ensemble des métriques principales, notamment le F1 score (\textbf{87.11\%}), la précision (\textbf{82.92\%}) et l’AUC (\textbf{0.96}), tout en présentant un temps d’inférence plus faible (0.04s) et un nombre total de paramètres légèrement réduit (8,58M vs 8,77M). Cette efficacité peut être en partie attribuée à l’utilisation du même taux de dropout élevé (0.8) pour les deux modèles, jouant un rôle crucial dans la régularisation, et à une meilleure capacité du GRU à modéliser des séquences de manière plus compacte.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\linewidth]{No_Embeddings_GRU.png}
-\caption{Projection t-SNE des représentations textuelles avant entraînement (à gauche, embeddings non ajustés) et durant le forward pass (à droite, avec le modèle GRU).}
+\caption{Projection t-SNE des représentations textuelles avant entraînement (à gauche, embeddings non ajustés) et après l'entrainement (à droite, avec le modèle GRU).}
 \label{fig:tsne_gru}
 \end{figure}
 
-La figure \ref{fig:tsne_gru} illustre, à gauche, les représentations des textes avant toute phase d'entraînement, c’est-à-dire lorsque les vecteurs d'embedding sont encore initialisés aléatoirement. À droite, on peut observer les représentations des mêmes textes après avoir effectué le forward pass dans le modèle GRU, lorsque les embeddings ont été ajustés au cours de l'entraînement.
+La figure \ref{fig:tsne_gru} illustre l’évolution des représentations au cours de l’apprentissage. À gauche, les embeddings sont initialisés aléatoirement et ne présentent aucune organisation discernable entre les classes. À droite, après passage dans le GRU entraîné, les documents sont projetés dans un espace où les clusters de classes apparaissent plus clairement séparés, malgré quelques zones de chevauchement.
 
-On observe que les deux classes (0.0 et 1.0) sont fortement entremêlées dans l’espace de représentation avant l'entraînement, ce qui est attendu, car à ce stade, les vecteurs de mots ne possèdent aucune information discriminante permettant de différencier les classes. Le modèle n’a pas encore appris à représenter les documents en fonction de leur contenu sémantique pertinent pour la tâche de classification.
+Cela confirme que, même en partant de représentations totalement vierges, le modèle GRU parvient à construire un espace latent relativement discriminant. Les bonnes performances observées dans le tableau \ref{tab:model_performance_scratch} sont donc cohérentes avec cette transformation spatiale.
 
-Après le forward pass, une dispersion des clusters devient visible. Les représentations des textes commencent à se séparer, formant des groupes distincts, bien que quelques zones présentent encore un chevauchement entre les classes. Ce phénomène est particulièrement intéressant, car il justifie les bonnes performances du modèle GRU, mesurées par la balanced accuracy et d'autres métriques. En effet, bien que les clusters ne soient pas complètement séparés, les zones de chevauchement sont suffisamment petites pour que le modèle puisse encore classifier de manière relativement précise, et ce, même si les frontières entre les classes ne sont pas parfaitement nettes.
+Néanmoins, malgré ces résultats prometteurs, les modèles entraînés avec des embeddings appris depuis zéro restent légèrement en retrait par rapport aux versions utilisant des embeddings pré-entraînés. Cela s’explique par l’absence de connaissance sémantique initiale dans les embeddings aléatoires, contrairement à GloVe ou FastText qui encapsulent déjà une structure linguistique issue de grands corpus. En ce sens, l'intégration d'embeddings spécialisés, éventuellement ajustés sur des corpus biomédicaux, représenterait une piste intéressante pour améliorer encore les performances.
 
-Cette visualisation met en évidence l'importance de la phase d'apprentissage : les couches RNN (LSTM ou GRU), combinées aux embeddings entraînés, doivent transformer ces représentations initialement chaotiques en espaces plus discriminants, capables de séparer efficacement les classes.
+\subsubsection{Performances des modèles LSTM et GRU avec word embeddings : GloVe et FastText}
 
-Cependant, bien que ces résultats soient prometteurs, l'utilisation d'embeddings pré-entraînés pourrait améliorer davantage la performance des modèles. En effet, ces embeddings, qui ont été ajustés sur de vastes corpus de texte, capturent déjà une large gamme de relations sémantiques entre les mots. Intégrer de tels embeddings pourrait fournir au modèle des représentations plus riches et plus structurées des mots, permettant ainsi une meilleure généralisation et une séparation plus nette des classes dans l'espace de représentation.
+Les performances des modèles LSTM et GRU entraînés avec des word embeddings pré-entraînés (GloVe et FastText) sont résumées dans le tableau suivant :
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\resizebox{1.05\textwidth}{!}{%
+\begin{tabular}{|l|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Modèle} & \textbf{Type d'Embedding} & \textbf{Balanced Acc} & \textbf{F1 Score} & \textbf{Précision} & \textbf{Rappel} & \textbf{AUC} & \textbf{Temps Inf. (s)} & \textbf{Temps Appr. (min)} \\
+\hline
+LSTM & FastText (300d) & 84.27\% & 80.01\% & 83.06\% & 77.19\% & 0.95 & 0.07 & 0.85 \\
+\hline
+GRU & FastText (300d) & 89.96\% & 86.11\% & 81.46\% & 91.32\% & \textbf{0.97} & \textbf{0.03} & 0.43 \\
+\hline
+LSTM & GloVe (300d) & 89.74\% & 85.24\% & 77.85\% & \textbf{94.19\%} & 0.95 & 0.06 & 0.73 \\
+\hline
+GRU & GloVe (300d) & \textbf{90.70\%} & \textbf{87.75\%} & \textbf{86.53\%} & 89.01\% & 0.96 & 0.04 & \textbf{0.43} \\
+\hline
+\end{tabular}
+}
+\caption{Performances des modèles RNN avec word embeddings pré-entraînés sur l'ensemble de test.}
+\label{tab:pretrained_embeddings}
+\end{table}
+
+Ces performances ont été obtenues à l’issue d’une phase d’optimisation des hyperparamètres sur l’ensemble de validation. Les configurations exactes des modèles et leurs paramètres optimaux sont disponibles en annexe dans le tableau~\autoref{tab:model-config}.
+
+L’analyse conjointe des résultats montre que les meilleures performances sont obtenues avec la combinaison GRU + GloVe. Cette configuration offre un excellent compromis entre précision (86.53\%), rappel (89.01\%) et temps d'inférence rapide (0.04s), tout en conservant un nombre modéré de paramètres (12,7M). Le taux de dropout élevé (0.8) dans ce cas agit efficacement comme régularisation, et l’optimiseur Adam combiné à un taux d’apprentissage de $1e^{-3}$ semble bien adapté.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{Merged_Images.png}
+\caption{Projection t-SNE des représentations textuelles avant entraînement (à gauche) et des états cachés du LSTM après entraînement (à droite) utilisant Glove (300d).}
+\label{fig:tsne_lstm_glove}
+\end{figure}
+
+La figure \ref{fig:tsne_lstm_glove} illustre la manière dont les embeddings GloVe sont transformés par le LSTM au cours de l'entraînement. À gauche, les embeddings pré-entraînés présentent déjà une certaine organisation des classes, témoignant d’une structure sémantique initiale. À droite, après propagation dans le modèle LSTM, les représentations deviennent nettement plus discriminantes : les clusters de classes sont mieux définis, bien que quelques zones de chevauchement subsistent. Cela montre que le LSTM parvient à projeter efficacement les textes dans un espace latent où la séparation entre les classes est plus marquée.
+
+Avant d'explorer les modèles utilisant des embeddings contextuels, il est pertinent de comparer les performances des modèles RNN lorsqu’ils apprennent les embeddings directement depuis les données, par rapport à l’utilisation de word embeddings pré-entraînés tels que GloVe ou FastText.
+
+Les résultats présentés dans les tableaux~\ref{tab:pretrained_embeddings} et~\ref{tab:model_performance_scratch} montrent que les modèles GRU et LSTM sont capables d’apprendre des représentations lexicales efficaces directement à partir du texte brut. Par exemple, un GRU entraîné avec des embeddings appris depuis zéro atteint un F1 score de 87.11\% et une Balanced Accuracy de 90.69\%, soit des performances très proches, voire équivalentes, à celles obtenues avec des embeddings GloVe (87.75\% et 90.70\%).
+
+En termes de précision, le GRU entraîné avec des embeddings appris (82.92\%) reste légèrement en retrait par rapport à sa version avec GloVe (86.53\%), mais compense avec un temps d’apprentissage plus court (0.37 min vs 0.43 min) et une inférence tout aussi rapide (0.04 s). Du côté du LSTM, les différences sont un peu plus marquées : le modèle avec GloVe surpasse celui avec embeddings appris sur toutes les métriques sauf le rappel, où le LSTM « from scratch » atteint un score impressionnant de 95.94\%, indiquant une très bonne capacité de détection des cas positifs.
+
+\subsubsection{Performances des modèles GRU avec les embeddings contextuels : PubMedBERT et BioBERT}
+
+Dans cette section, nous présentons les performances des modèles GRU bidirectionnel noté ici \texttt{BiGRU} utilisant des embeddings contextuels spécialisés, à savoir \gls{pubmedbert} et \gls{biobert}, qui ont été préalablement entraînés sur des corpus biomédicaux. Ces modèles sont particulièrement adaptés aux tâches de classification dans le domaine de la santé, car ils intègrent une compréhension fine du vocabulaire et des relations sémantiques propres au domaine biomédical.
+
+Les résultats des différentes configurations du modèle BiGRU avec les embeddings GloVe, FastText, PubMedBERT et BioBERT sont synthétisés dans le tableau~\ref{tab:biGRU_performance_contextual_embeddings}.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\resizebox{1.05\textwidth}{!}{%
+\begin{tabular}{|l|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Modèle} & \textbf{Type d'Embedding} & \textbf{Balanced Acc} & \textbf{F1 Score} & \textbf{Précision} & \textbf{Rappel} & \textbf{AUC} & \textbf{Temps Inf. (s)} & \textbf{Temps Appr. (min)} \\
+\hline
+BiGRU + Bahdanau & GloVe (300d) & 95.78\% & 96.50\% & 96.49\% & 96.50\% & 0.99 & 0.05 & 4.96 \\
+\hline
+BiGRU + Bahdanau & FastText (300d) & 96.02\% & 96.91\% & \textbf{96.93\%} & 96.93\% & 0.99 & 0.04 & 4.45 \\
+\hline
+BiGRU + Bahdanau & PubMedBERT (768d) & 96.09\% & 97.72\% & 97.05\% & \textbf{98.40\%} & \textbf{1.00} & 1.67 & 68.83 \\
+\hline
+BiGRU + Bahdanau & BioBERT (768d) & \textbf{96.10\%} & \textbf{98.00\%} & 97.00\% & 98.00\% & 0.99 & 1.68 & \textbf{70.37} \\
+\hline
+\end{tabular}
+}
+\caption{Performances des modèles BiGRU avec différents embeddings sur l'ensemble de test.}
+\label{tab:biGRU_performance_contextual_embeddings}
+\end{table}
+
+Les résultats obtenus montrent des performances remarquables pour les modèles (dont les hyperparamètres sont dans (\autoref{tab:model-config})) utilisant des embeddings contextuels, en particulier \gls{biobert} et \gls{pubmedbert}. Ces configurations surpassent largement les versions utilisant des embeddings classiques comme GloVe ou FastText. Le modèle \textit{BiGRU + BioBERT} atteint un F1 score de 98.00\%, avec une précision de 97.00\% et un rappel de 98.00\%, démontrant une capacité exceptionnelle à détecter les classes positives, ce qui est crucial dans les domaines médicaux. Le modèle \textit{BiGRU + PubMedBERT}, quant à lui, enregistre un F1 score de 97.72\%, avec une précision de 97.05\% et un rappel atteignant 98.40\%.
+
+Les deux modèles contextuels présentent également un AUC très élevé : 0.99 pour BioBERT et 1.00 pour PubMedBERT, illustrant leur excellente capacité de discrimination. En revanche, leur coût en temps d'entraînement est significatif (environ 70 minutes), et le temps d'inférence est d’environ 1.67 secondes, ce qui reste raisonnable au vu des performances obtenues.
+
+En comparaison, les modèles utilisant GloVe et FastText obtiennent des résultats légèrement inférieurs, avec un F1 score respectif de 96.50\% et 96.91\%, tout en offrant des avantages en termes de rapidité d'entraînement (moins de 5 minutes) et d'inférence (inférieure à 0.05 secondes). Cela met en lumière un compromis entre performance et coût computationnel.
+
+Par conséquent, les résultats confirment que les modèles basés sur des embeddings contextuels spécialisés, comme BioBERT, sont particulièrement efficaces pour la classification de textes biomédicaux. Malgré leur exigence en ressources, leur précision et leur capacité à saisir les subtilités du langage biomédical justifient leur utilisation dans des contextes où la fiabilité des prédictions est essentielle.
+
+
+
+
 
 
 
@@ -1118,6 +1199,41 @@ Non-Malaria (Alzheimer’s, Dengue) & 0 & Articles sur des maladies autres que l
 \caption{Détails des classes pour la tâche multiclasses.}
 \label{tab:multiclass_classes}
 \end{table}
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\resizebox{1.05\textwidth}{!}{
+\begin{tabular}{|l|l|c|c|l|c|r|}
+\hline
+\textbf{Model} & \textbf{Embedding} & \textbf{Hidden Dim} & \textbf{Dropout} & \textbf{Optimizer} & \textbf{LR} & \textbf{Params} \\
+\hline
+LSTM & Learned (200d) & 350 & 0.8 & RMSprop & 1e-3 & 8,773,551 \\
+\hline
+GRU  & Learned (200d) & 350 & 0.8 & Adam & 1e-3 & 8,580,351 \\
+\hline
+LSTM & FastText (300d) & 500 & 0.5 & AdamW & 5e-3 & 13,605,101 \\
+\hline
+GRU & FastText (300d) & 350 & 0.5 & RMSprop & 1e-3 & 12,685,551 \\
+\hline
+LSTM & GloVe (300d) & 450 & 0.3 & RMSprop & 4e-4 & 13,354,651 \\
+\hline
+GRU & GloVe (300d) & 350 & 0.8 & Adam & 1e-3 & 12,685,551 \\
+\hline
+BiGRU + Bahdanau & GloVe (300d) & 300 & 0.9 & RMSprop & 1e-4 & 13,265,401 \\
+\hline
+BiGRU + Bahdanau  & FastText (300d) & 350 & 0.8 & RMSprop & 1e-3 & 13,616,201 \\
+\hline
+BiGRU + Bahdanau & PubMedBERT (768d) & 256 & 0.6 & AdamW & 1e-4 & 1,708,033 \\
+\hline
+BiGRU + Bahdanau  & BioBERT (768d) & 256 & 0.6 & RMSprop & 1e-4 & 110,018,305 \\
+\hline
+\end{tabular}
+}
+\caption{Model configurations used in training.}
+\label{tab:model-config}
+\end{table}
+
 
 \section{Figures additionnelles}
 
