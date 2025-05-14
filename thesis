@@ -10,6 +10,7 @@
 \usepackage{amsmath}              % pour les formules mathématiques          % 
 \usepackage{cite}  
 \usepackage{float}
+\usepackage{array}
 
 
 
@@ -44,7 +45,7 @@
 
 \begin{titlepage}
     \begin{center}
-        \includegraphics[width=7cm]{images/uliege.jpg} \\[1cm]
+        \includegraphics[width=7cm]{uliege.jpg} \\[1cm]
         
         {\Huge \textsc{Université de Liège}} \\[0.5cm]
         {\Large Faculté des Sciences Appliquées} \\[2.5cm]
@@ -701,7 +702,7 @@ Pour répondre à cette problématique, Lee et al. (2020) ont introduit \gls{bio
 
 Cette figure~\ref{fig:biobert_architecture} illustre le processus global de construction de \gls{biobert}, structuré en deux phases principales : le pré-entraînement et le fine-tuning. La première phase consiste à continuer l’entraînement du modèle BERT\textsubscript{BASE} sur de larges corpus spécialisés tels que PubMed et PMC, à l’aide de la tâche de modélisation de langage masqué (Masked Language Modeling). Cette étape vise à adapter les représentations linguistiques du modèle aux spécificités du domaine biomédical, sans modifier l’architecture initiale de \gls{bert}. La seconde phase, le fine-tuning, correspond à l’adaptation du modèle à des tâches précises du \gls{tln} biomédical telles que la reconnaissance d’entités nommées (NER), l’extraction de relations (RE) et le question answering (QA). Cette visualisation met en évidence que les gains de performance de \gls{biobert} ne proviennent pas d’un changement architectural, mais exclusivement du type et de la qualité du corpus utilisé lors de l’entraînement, soulignant ainsi l’importance des données spécialisées dans le succès de l’adaptation des modèles de langage préentraînés.
 
-L'étude de Lee et al. a comparé différentes combinaisons de corpus pour le pré-entraînement, démontrant que plus le corpus est biomédical, meilleures sont les performances du modèle :
+L'étude de Lee et al. (2020) a comparé différentes combinaisons de corpus pour le pré-entraînement, démontrant que plus le corpus est biomédical, meilleures sont les performances du modèle~\cite{lee2020biobert}:
 
 \begin{table}[H]
 \centering
@@ -721,12 +722,13 @@ BioBERT (+PubMed + PMC) & Wiki + Books + PubMed + PMC \\
 }
 \end{table}
 
-L’évaluation a été menée sur plusieurs benchmarks de référence en \gls{tln}biomédical. Parmi ceux-ci :
-\begin{itemize}
-    \item \textit{NER (Named Entity Recognition)} : sur des jeux de données comme NCBI Disease, BC5CDR, JNLPBA, BioNLP13CG.
-    \item \textit{RE (Relation Extraction)} : sur ChemProt et GAD.
-    \item \textit{QA (Question Answering)} : sur BioASQ, une compétition d'extraction de réponses médicales à partir de PubMed.
-\end{itemize}
+L’évaluation de BioBERT a été menée sur plusieurs benchmarks de référence dans le domaine du traitement automatique du langage naturel biomédical. Ces benchmarks sont essentiels pour tester les capacités du modèle sur des tâches spécifiques et permettent de mesurer la performance de BioBERT sur des tâches fondamentales pour l’analyse et l’interprétation des textes biomédicaux. Parmi les principales tâches évaluées, on trouve la reconnaissance d’entités nommées (NER), l’extraction de relations (RE) et le question answering (QA).
+
+La tâche de reconnaissance d’entités nommées, ou NER (Named Entity Recognition), consiste à identifier et classer les entités nommées présentes dans un texte. Ces entités peuvent inclure des termes comme les maladies, les médicaments, les gènes, etc. Plusieurs jeux de données ont été utilisés pour cette tâche, permettant de tester la capacité de BioBERT à reconnaître les entités médicales. Parmi ces jeux de données, on trouve le corpus NCBI Disease, qui contient des articles biomédicaux annotés sur les maladies, utilisé pour évaluer la capacité de BioBERT à identifier des entités médicales liées aux pathologies. Le jeu de données BC5CDR est spécifique à l’extraction d’entités liées aux maladies et aux médicaments, en mettant un accent particulier sur la relation entre les maladies et les substances chimiques. Le jeu JNLPBA, quant à lui, inclut des entités comme les protéines et les gènes, qui sont essentielles dans le domaine de la biologie moléculaire. Enfin, le corpus BioNLP13CG, provenant de la compétition BioNLP-2013, regroupe des entités relatives à la génomique, aux médicaments et à d’autres domaines de la biologie.
+
+En ce qui concerne l’extraction de relations (RE), une autre tâche cruciale pour le traitement du langage biomédical, BioBERT a été évalué sur des jeux de données comme ChemProt et GAD. La tâche RE vise à identifier et classifier les relations entre différentes entités dans un texte, telles que les connexions entre maladies et traitements ou entre gènes et protéines. Le corpus ChemProt contient des relations entre substances chimiques et cibles biomoléculaires, et permet ainsi d’évaluer la capacité de BioBERT à extraire des relations biologiques. Le jeu de données GAD (Genetic Association Database), quant à lui, est utilisé pour détecter des relations entre des mutations génétiques et des maladies humaines, un domaine essentiel pour la génétique biomédicale.
+
+Enfin, dans la tâche de question answering (QA), BioBERT a été testé sur le benchmark BioASQ, une compétition annuelle dédiée à l’extraction de réponses médicales à partir de PubMed et d'autres documents biomédicaux. Les questions posées dans BioASQ couvrent une large gamme de sujets médicaux et bioinformatiques, ce qui permet de tester la capacité de BioBERT à extraire des informations pertinentes et précises à partir de documents scientifiques complexes. Cette tâche est particulièrement importante dans un contexte où les médecins et chercheurs doivent pouvoir accéder rapidement à des réponses fiables basées sur une vaste quantité d’informations biomédicales.
 
 \begin{figure}[H]
     \centering
@@ -741,45 +743,96 @@ La figure~\ref{fig:biobert_results}(b) met en évidence l’évolution des perfo
 
 Enfin, la figure~\ref{fig:biobert_results}(c) compare directement les performances de \gls{biobert} par rapport au modèle \gls{bert} généraliste. L’amélioration est mesurée en fonction de la taille du jeu de données utilisé pour le fine-tuning, ce dernier étant représenté en échelle logarithmique. Il ressort de cette analyse que les gains les plus significatifs sont obtenus sur les tâches de question answering (QA), notamment sur les différentes versions de BioASQ, où l'amélioration dépasse les 6~\%. Les tâches de NER bénéficient également d’un gain notable, généralement compris entre 2~\% et 4~\%. En revanche, les tâches d’extraction de relations (RE) affichent des gains plus modestes, bien qu’ils restent constants. Un aspect particulièrement intéressant est que les plus fortes améliorations sont observées sur les jeux de données de petite taille, ce qui souligne l’intérêt de \gls{biobert} dans des contextes où les ressources annotées sont limitées. Ainsi, ces résultats confirment la pertinence du pré-entraînement sur des données spécialisées, et démontrent que la qualité du corpus joue un rôle central dans l’adaptation efficace des modèles de langage aux domaines spécifiques.
 
-
 \newpage
 
-\chapter{Architectures and Experiments}
+\chapter{Architectures et expériences}
 
+\section{Analyse exploratoire des données}
 
+Cette section propose une analyse exploratoire des deux jeux de données extraits de PubMed, contenant des résumés d’articles scientifiques liés à diverses pathologies. L’objectif est de mieux comprendre la structure des données, d’identifier des déséquilibres de classes, et de repérer certaines tendances textuelles pouvant influencer la performance des modèles.
 
-\section{Data Sources and Dataset Composition}
+Les deux jeux de données partagent les mêmes variables principales, notamment : un identifiant unique (\texttt{PMID}), le \texttt{Titre} de l’article, le \texttt{Résumé} (\texttt{Abstract}), les \texttt{Mots-clés}, l’année de publication (\texttt{PublicationYear}), les \texttt{MeSH Terms}, ainsi que l’étiquette de classe (\texttt{Label}). Une description complète de ces variables est disponible en annexe (voir Table~\ref{tab:variables}).
 
+La première tâche concerne la classification binaire entre les articles liés au paludisme (classe 1) et ceux portant sur d’autres pathologies telles qu’Alzheimer ou la Dengue (classe 0). L’ensemble de données correspondant comporte \textit{29\,997} résumés (voir Figure~\ref{fig:word_distribution_binary_class}), collectés entre 1950 et 2024. La distribution des classes y est déséquilibrée, avec une surreprésentation des articles relatifs au paludisme. En termes de nombre de mots, le nombre de mots dans les résumés varie entre un minimum de 1 et un maximum de 4985 mots, avec une moyenne d’environ 243.86 mots par résumé.
 
+La seconde tâche est une classification multiclasses impliquant \textit{42\,879} résumés, répartis en neuf catégories de maladies, allant de pathologies infectieuses (tuberculose, choléra, lèpre, etc.) à non infectieuses (leucémie, asthme, Parkinson, etc.) (voir Figure~\ref{fig:word_distribution_multi_class}). Ces données couvrent également la période de 1950 à 2024 et présentent un déséquilibre marqué entre les classes. Pour cette tâche, le nombre de mots dans les résumés varie de 0 (cellules vides) à 3814 mots, avec une moyenne de 219.25 mots par résumé.
 
+À noter que les maladies infectieuses sont généralement causées par des agents pathogènes externes (bactéries, virus, parasites), tandis que les maladies non infectieuses résultent souvent de facteurs internes tels que des mécanismes chroniques, auto-immuns ou génétiques.
 
+Les histogrammes des distributions des nombres de mots dans les résumés de ces deux tâches sont illustrés dans la Figure~\ref{fig:class_distributions}. Cette analyse permet de mieux comprendre les variations dans le nombre de mots, notamment les différences entre les résumés très courts et ceux plus détaillés, ce qui pourrait potentiellement influencer la performance des modèles de classification. Les histogrammes des distributions des mots pour chaque tâche sont présentés respectivement sous les Figures~\ref{fig:word_distribution_binary_class} et~\ref{fig:word_distribution_multi_class} en annexe.
 
+\begin{center}
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.48\textwidth}
+  \includegraphics[width=0.65\linewidth]{binary_class_distribution.png}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+  \includegraphics[width=0.65\linewidth]{multiclass_class_distribution.png}
+\end{minipage}
+\caption{Répartition des classes dans les jeux de données de classification binaire (gauche) et multiclasses (droite).}
+\label{fig:class_distributions}
+\end{figure}
+\end{center}
 
+\section{Prétraitement des données}
 
+Le prétraitement des données est une étape clé dans la préparation des textes pour l’analyse. Il comprend plusieurs sous-étapes essentielles, notamment le nettoyage des textes, la tokenisation, la lemmatisation et la vectorisation.
 
+Tout d'abord, les résumés sont nettoyés en supprimant les caractères spéciaux non pertinents, tout en conservant certains symboles mathématiques tels que les opérateurs de comparaison. Ensuite, le texte est converti en minuscules et les espaces inutiles sont éliminés pour standardiser les données.
 
+Une fois le texte nettoyé, il est tokenisé, c'est-à-dire décomposé en mots individuels. À cette étape, la lemmatisation est appliquée. Chaque mot est réduit à sa forme de base (ou lemme), ce qui permet de minimiser la variabilité des termes tout en maintenant leur signification fondamentale. Par exemple, \textit{mangeraient}, \textit{mangeons} et \textit{manger} seraient tous réduits à \textit{manger}. De plus, les mots vides, c'est-à-dire les termes sans signification contextuelle importante (tels que \textit{et}, \textit{le}, \textit{de}), sont supprimés afin de ne conserver que les mots pertinents pour l'analyse.
 
+Une fois les textes nettoyés et standardisés, le corpus est divisé en trois sous-ensembles distincts afin de structurer le processus d’entraînement. Le jeu de données est réparti en 70\% pour l’entraînement, 15\% pour la validation, et 15\% pour les tests. Cette séparation garantit une évaluation objective des modèles développés. L'ensemble d'entraînement est utilisé pour ajuster les paramètres du modèle, l'ensemble de validation permet de suivre la performance en cours d'entraînement et de détecter d’éventuels surapprentissages, tandis que l’ensemble de test fournit une estimation finale de la capacité du modèle à généraliser sur des données inédites.
 
+Afin de mieux visualiser la répartition des termes dominants dans chaque tâche de classification, des nuages de mots ont été générés pour illustrer les termes les plus fréquents. Dans le nuage de mots pour la classification binaire, des termes comme \textit{parasite}, \textit{patient}, \textit{infection} et \textit{disease} ressortent en grande taille pour la classe 0, indiquant que ces termes sont particulièrement fréquents et significatifs dans les résumés relatifs à cette classe. En revanche, des mots tels que \textit{schistosomiasis}, \textit{prevalence}, et \textit{young} apparaissent en caractères plus petits, ce qui suggère qu’ils sont moins fréquents, mais toujours importants dans ce contexte.
 
+Pour la classe 1, des mots comme \textit{malaria}, \textit{plasmodium}, et \textit{mosquito} sont affichés en grand, mettant en évidence leur importance et leur fréquence dans les résumés relatifs au paludisme. D'autres termes, tels que \textit{prevalence}, \textit{disease} et \textit{patient}, apparaissent en plus petites tailles, signifiant qu’ils sont également présents, mais dans une moindre mesure.
 
+Un raisonnement similaire peut être appliqué à la classification multiclasses. Dans ce cas, les nuages de mots reflètent les caractéristiques uniques de chaque catégorie de maladie. Par exemple, pour les pathologies infectieuses, des termes comme \textit{tuberculosis}, \textit{cholera}, et \textit{leprosy} sont visibles en grand, tandis que pour les maladies non infectieuses, des mots comme \textit{leukemia}, \textit{asthma}, et \textit{Parkinson} dominent. Les termes généraux tels que \textit{disease}, \textit{prevalence}, et \textit{patient} sont présents dans les deux catégories, mais leur taille varie en fonction de leur fréquence dans les différentes classes.
 
+Les résultats des nuages de mots pour chaque tâche de classification sont disponibles en annexe, respectivement dans les Figures~\ref{fig:binary_word_cloud} et~\ref{fig:multi_word_cloud}. Ces visualisations permettent de mieux comprendre la distribution des termes les plus significatifs dans les deux types de classification et offrent une perspective intéressante sur les caractéristiques sémantiques des données textuelles.
 
+Dans le cadre des expériences impliquant des modèles entraînés sans embeddings préexistants (learn from scratch), ainsi que ceux utilisant des représentations vectorielles statiques telles que \gls{glove} et \gls{fasttext}, un pipeline spécifique de préparation des données a été développé. Ce pipeline inclut plusieurs étapes essentielles : la tokenisation des textes, la création d’un vocabulaire à partir du corpus d'entraînement, l'encodage des séquences en indices numériques, ainsi que le padding pour garantir une longueur uniforme des séquences. Un seuil de fréquence minimale est appliqué pour éliminer les mots rares, tandis que les termes absents du vocabulaire sont remplacés par un jeton spécial \texttt{<UNK>}. Les séquences sont ensuite converties en tenseurs, ce qui les rend compatibles avec l'entraînement de réseaux de neurones. Cette approche vise à fournir une représentation normalisée et cohérente du texte, particulièrement adaptée pour l’entraînement de modèles légers ou d’architectures récurrentes (\gls{lstm}/\gls{gru}), que ce soit avec des embeddings appris durant l’entraînement ou initialisés avec des matrices pré-entraînées comme celles de \gls{glove} ou \gls{fasttext}.
 
+Lors des expériences impliquant des modèles utilisant des embeddings contextuels, un pipeline distinct est mis en place. Celui-ci repose sur l’utilisation d'un tokeniseur adapté, qui transforme chaque texte brut en une séquence de tokens, puis génère les identifiants d'entrée et les masques d'attention nécessaires. Le tokeniseur prend également en charge le padding et la troncature des séquences à une longueur maximale de 400 tokens, garantissant ainsi une taille uniforme des entrées. Ensuite, ces données sont intégrées dans une classe de dataset personnalisée, permettant de préparer les textes pour des modèles utilisant des embeddings contextuels. Les étiquettes de classification sont ajoutées sous forme de tenseurs, et chaque entrée est ainsi représentée par ses identifiants de tokens, ses masques d'attention et ses étiquettes correspondantes. Ce pipeline est conçu pour traiter efficacement des textes longs et complexes, tout en optimisant l'intégration des embeddings contextuels pour des modèles de classification multiclasses (voir Figure~\ref{fig:contextual_pipeline} pour une illustration détaillée du pipeline).
 
+\section{Présentation des architectures et types d’embeddings}
 
+Afin de répondre aux deux tâches de classification (binaire et multiclasses), nous avons expérimenté plusieurs architectures de réseaux neuronaux, chacune combinée à des représentations textuelles différentes. Ces combinaisons visent à capturer des caractéristiques linguistiques et sémantiques variées, tout en tenant compte des contraintes de complexité et de temps de calcul.
 
+Trois familles principales d’approches ont été explorées en termes de représentation des textes :
 
+\begin{itemize}
+    \item \textit{Sans embeddings pré-entraînés} : les vecteurs de mots sont appris \textit{from scratch} au cours de l'entraînement, ce qui peut convenir à des corpus très spécifiques mais exige généralement plus de données pour être efficace.
+    
+    \item \textit{Word embeddings statiques} : utilisation de vecteurs pré-entraînés tels que \texttt{GloVe} (300 dimensions) et \texttt{FastText} (300 dimensions). Ces représentations fournissent une sémantique enrichie mais restent fixes quel que soit le contexte d’apparition du mot.
+    
+    \item \textit{Embeddings contextuels} : recours à des modèles de type \gls{bert}, en particulier \gls{biobert} et \gls{pubmedbert}, spécifiquement entraînés sur des textes biomédicaux. Ces modèles produisent des représentations dynamiques, sensibles au contexte dans lequel chaque mot apparaît.
+\end{itemize}
 
+Concernant les architectures de modèles, les choix se sont appuyés sur des considérations à la fois théoriques (capacité de modélisation du langage), pratiques (temps d’inférence et d'entraînement), et empiriques (performances observées dans la littérature et sur des jeux similaires). Les combinaisons testées selon chaque tâche sont résumées ci-dessous :
 
+\begin{itemize}
+    \item \textbf{Tâche de classification binaire} :
+    \begin{itemize}
+        \item \gls{lstm} : capable de capturer des dépendances séquentielles à long terme.
+        \item \gls{gru} : alternative plus efficace au \gls{lstm}, avec moins de paramètres à entraîner.
+        \item \gls{gru} bidirectionnel avec attention de Bahdanau : mécanisme d’attention qui permet au modèle de se concentrer dynamiquement sur les segments pertinents du résumé, améliorant l’interprétabilité et la précision.
+    \end{itemize}
+    
+    \item \textbf{Tâche de classification multiclasses} :
+    \begin{itemize}
+        \item \gls{lstm}, \gls{gru};
+        \item \gls{cnn} + \gls{gru} et \gls{cnn} + \gls{lstm} : combinaison permettant de capturer à la fois des motifs locaux (via \gls{cnn}) et des dépendances globales (via \gls{gru} ou \gls{lstm} );
+        \item \gls{gru} bidirectionnel avec attention de Bahdanau.
+    \end{itemize}
+\end{itemize}
 
+En plus des performances de classification, l’évaluation a également porté sur des critères de complexité : temps d'entraînement, temps d'inférence, et charge mémoire. Ces éléments sont particulièrement critiques dans un contexte biomédical, où les ressources peuvent être limitées et les exigences de réactivité élevées.
 
-
-
-
-
-
-
-
+Une comparaison détaillée entre les différentes combinaisons d’architectures et d’embeddings sera présentée dans les sections suivantes, en lien avec les performances obtenues et les métriques d’évaluation spécifiques à chaque tâche.
 
 \section{Métriques d’évaluation pour la classification de textes biomédicaux}
 
@@ -787,7 +840,21 @@ Dans le cadre de la classification de textes, en particulier dans des domaines s
 
 L’\textbf{accuracy}, définie comme le rapport entre les prédictions correctes et le nombre total de prédictions, reste la métrique la plus utilisée. Toutefois, son efficacité diminue fortement en cas de classes déséquilibrées. Comme l’ont noté Japkowicz et Stephen~\cite{japkowicz2002class}, un modèle peut obtenir une accuracy élevée simplement en prédisant la classe majoritaire, sans réellement apprendre à discriminer les classes minoritaires.
 
-Pour remédier à ces limites, la \textbf{balanced accuracy} a été introduite comme alternative plus équitable. Elle est définie comme la moyenne des rappels (\textit{recall}) pour chaque classe, permettant ainsi une évaluation robuste, même lorsque certaines classes sont fortement sous-représentées~\cite{brodersen2010balanced}.
+Pour remédier à ces limites, la \textbf{balanced accuracy} a été introduite comme alternative plus équitable. Elle est définie comme la moyenne des rappels (\textit{recall}) pour chaque classe, permettant ainsi une évaluation robuste, même lorsque certaines classes sont fortement sous-représentées~\cite{brodersen2010balanced}. La formule de la balanced accuracy dans le cas binaire est donnée par :
+
+\[
+\text{Balanced Accuracy} = \frac{1}{2} \left( \frac{TP}{TP + FN} + \frac{TN}{TN + FP} \right)
+\]
+
+où \( TP \) est le nombre de vrais positifs, \( FN \) le nombre de faux négatifs, \( TN \) le nombre de vrais négatifs et \( FP \) le nombre de faux positifs.
+
+Dans le cas de la classification multi-classes, la balanced accuracy est calculée en moyennant les rappels de chaque classe :
+
+\[
+\text{Balanced Accuracy} = \frac{1}{C} \sum_{i=1}^{C} \frac{TP_i}{TP_i + FN_i}
+\]
+
+où \( C \) représente le nombre total de classes et \( TP_i \), \( FN_i \) sont respectivement les vrais positifs et les faux négatifs pour la classe \( c_i \).
 
 La \textbf{precision} et le \textbf{recall} sont deux métriques complémentaires : la première mesure la proportion de vrais positifs parmi les prédictions positives, tandis que la seconde mesure la proportion de vrais positifs correctement identifiés parmi tous les éléments réellement positifs. Le \textbf{F1-score}, leur moyenne harmonique, est recommandé dans les travaux récents sur la classification de textes en contexte médical, notamment par Jin et al.~\cite{jin2019recurrent}, car il pénalise les déséquilibres entre précision et rappel. 
 
@@ -869,6 +936,97 @@ Enfin l'\gls{auc} (Area Under the Curve), et plus précisément l’AUC-ROC (Rec
 
 
 
+\newpage
+\appendix
+
+\section{Annexe}
+
+\section{Tables additionnelles}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Variable}       & \textbf{Description} \\ \hline
+\texttt{PMID}           & Identifiant unique de l’article dans la base de données PubMed. \\ \hline
+\texttt{Title}          & Titre de l’article scientifique. \\ \hline
+\texttt{Abstract}       & Résumé de l’article, contenant des informations clés sur l’étude. \\ \hline
+\texttt{Keywords}       & Liste de mots-clés associés à l’article. \\ \hline
+\texttt{PublicationYear}& Année de publication de l’article. \\ \hline
+\texttt{MeSH Terms}     & Termes issus du thésaurus médical MeSH, permettant une indexation thématique. \\ \hline
+\texttt{Label}          & Étiquette de classe associée à l’article (utilisée pour la classification). \\ \hline
+\end{tabular}
+\caption{Description des variables présentes dans les jeux de données utilisés.}
+\label{tab:variables}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3.5cm}|c|p{8cm}|}
+\hline
+\textbf{Classe} & \textbf{Label} & \textbf{Description} \\ \hline
+Malaria & 1 & Articles liés au paludisme. \\ \hline
+Non-Malaria (Alzheimer’s, Dengue) & 0 & Articles sur des maladies autres que le paludisme (Alzheimer, Dengue). \\ \hline
+\end{tabular}
+\caption{Détails des classes pour la tâche binaire.}
+\label{tab:binary_classes}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Label} & \textbf{Maladie}         & \textbf{Type}                           \\ \hline
+0              & Tuberculose              & Infectieuse                             \\ \hline
+1              & Choléra                  & Infectieuse                             \\ \hline
+2              & Lèpre                    & Infectieuse                             \\ \hline
+3              & Ebola                    & Infectieuse                             \\ \hline
+4              & Leucémie                 & Non-infectieuse (Cancer)                \\ \hline
+5              & Asthme                   & Non-infectieuse (Inflammatoire chronique)\\ \hline
+6              & Parkinson                & Non-infectieuse (Neurodégénérative)     \\ \hline
+7              & Lupus                    & Non-infectieuse (Autoimmune)            \\ \hline
+8              & Mucoviscidose            & Non-infectieuse (Génétique)             \\ \hline
+\end{tabular}
+\caption{Détails des classes pour la tâche multiclasses.}
+\label{tab:multiclass_classes}
+\end{table}
+
+\section{Figures additionnelles}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\linewidth]{word_distribution_per_abstract_binary_class.png}
+\caption{Répartition du nombre de mots dans les résumés pour la tâche de classification binaire.}
+\label{fig:word_distribution_binary_class}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\linewidth]{word_distribution_per_abstract_multi_class.png}
+\caption{Répartition du nombre de mots dans les résumés pour la tâche de classification multiclasses.}
+\label{fig:word_distribution_multi_class}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{binary_word_cloud.png}
+\caption{Nuage de mots pour la classification binaire, illustrant les termes les plus fréquents associés à chaque classe.}
+\label{fig:binary_word_cloud}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{multi_word_cloud.png}
+\caption{Nuage de mots pour la classification multiclasses, illustrant les termes dominants pour chaque catégorie de maladie(pour 8 classes).}
+\label{fig:multi_word_cloud}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.35\textwidth]{contextual_pipeline.png}
+\caption{Pipeline de préparation des données pour les modèles utilisant des embeddings contextuels}
+\label{fig:contextual_pipeline}
+\end{figure}
 
 
 
