@@ -7,12 +7,12 @@
 \usepackage{lmodern}
 \usepackage[french]{babel}
 \usepackage[acronym]{glossaries}
-\usepackage{amsmath}              % pour les formules mathématiques          % 
+\usepackage{amsmath}     
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3} 
 \usepackage{cite}  
 \usepackage{float}
 \usepackage{array}
-
-
 
 \usepackage{url}
 \usepackage[a4paper, left=2.5cm, right=2.5cm, top=1.8cm, bottom=1.8cm]{geometry}
@@ -377,21 +377,25 @@ En conservant les propriétés sémantiques de \gls{w2v} tout en capturant des r
 
 \subsubsection{GloVe}
 
-\gls{glove} \cite{pennington2014glove} est une méthode d'apprentissage non supervisée qui combine les avantages des approches basées sur les fenêtres locales (comme \gls{w2v}) et des méthodes statistiques globales. Elle repose sur la construction d'une matrice de cooccurrence entre les mots dans un corpus, où chaque entrée \( X_{ij} \) correspond au nombre de fois que le mot \( j \) apparaît dans le contexte du mot \( i \).
+\gls{glove} \cite{pennington2014glove} est une méthode d'apprentissage non supervisée qui combine les avantages des approches basées sur les fenêtres locales (comme \gls{w2v}) et des méthodes statistiques globales. Contrairement à Word2Vec, qui optimise une fonction de coût locale, \gls{glove} prend en compte des informations globales sur la distribution des mots dans le corpus entier. Il repose sur la construction d'une matrice de cooccurrence entre les mots dans un corpus, où chaque entrée \( X_{ij} \) correspond au nombre de fois que le mot \( j \) apparaît dans le contexte du mot \( i \), c'est-à-dire une mesure de la fréquence des cooccurrences entre les mots.
 
-L’objectif du modèle est d’apprendre des vecteurs \( w_i \) et \( \tilde{w}_j \) pour chaque mot \( i \) et contexte \( j \) de sorte que leur produit scalaire approche le logarithme de \( X_{ij} \) :
+L’objectif du modèle est d’apprendre des vecteurs \( w_i \) et \( \tilde{w}_j \) pour chaque mot \( i \) et contexte \( j \) de sorte que leur produit scalaire approche le logarithme de \( X_{ij} \). Ce modèle s'exprime ainsi par la relation suivante :
 
 \[
 w_i^\top \tilde{w}_j + b_i + \tilde{b}_j \approx \log(X_{ij})
 \]
 
-où \( b_i \) et \( \tilde{b}_j \) sont des biais appris. En optimisant cette relation sur toutes les paires de mots fréquents, \gls{glove} produit des embeddings qui capturent efficacement les relations sémantiques et analogiques, comme illustré par :
+où \( b_i \) et \( \tilde{b}_j \) sont des biais appris pour chaque mot et chaque contexte respectivement. Ce modèle est entraîné à optimiser cette relation sur toutes les paires de mots fréquents dans le corpus. L'optimisation de cette fonction permet de capturer les relations sémantiques et syntaxiques entre les mots. En particulier, les vecteurs appris par \gls{glove} sont capables de capturer des analogies de type :
 
 \[
 \vec{\text{roi}} - \vec{\text{homme}} + \vec{\text{femme}} \approx \vec{\text{reine}}
 \]
 
-Ces deux méthodes fournissent une base solide pour représenter les mots avant l'application de modèles de traitement plus complexes. Toutefois, leurs limites résident dans leur incapacité à désambiguïser les mots selon le contexte, ce qui a motivé l’émergence des représentations contextuelles abordées dans la section suivante.
+Les embeddings produits par \gls{glove} sont ainsi capables de représenter des relations complexes entre les mots, non seulement sémantiques, mais aussi analogiques, ce qui les rend particulièrement utiles dans des applications de traitement du langage naturel comme la classification de texte, la recherche d'informations, et la génération de texte.
+
+Un avantage clé de \gls{glove} est qu'il combine les informations locales de cooccurrence avec une représentation globale du corpus, ce qui permet d'apprendre des représentations de mots qui capturent non seulement des relations sémantiques proches mais aussi des relations plus abstraites, comme les analogies. Contrairement aux modèles locaux, qui se concentrent uniquement sur les relations entre les mots dans une fenêtre fixe, \gls{glove} intègre toute la structure globale des cooccurrences.
+
+Cependant, une limitation de \gls{glove} réside dans son incapacité à gérer les ambiguïtés contextuelles des mots. Par exemple, le mot "banco" peut avoir des significations très différentes selon le contexte, mais \gls{glove} produira une seule représentation vectorielle qui ne tiendra pas compte de ces variations. Ce manque de contextualisation a motivé l'émergence de modèles plus avancés, tels que les modèles de représentation contextuelle des mots (par exemple, \gls{bert}), qui abordent ce problème en générant des embeddings différents en fonction du contexte dans lequel le mot apparaît.
 
 \begin{figure}[H]
     \centering
@@ -523,7 +527,8 @@ Les méthodes de rééchantillonnage visent à modifier la distribution des donn
 Bien que les deux types de méthodes soient couramment utilisés dans la littérature, notre projet se concentre exclusivement sur les techniques de \textbf{suréchantillonnage}. Ce choix repose sur une revue d’articles spécialisés dans l’apprentissage sur données déséquilibrées, notamment dans le domaine biomédical, où la conservation des données majoritaires est souvent cruciale pour préserver la richesse des cas cliniques. Par ailleurs, les méthodes de suréchantillonnage permettent d’enrichir la classe minoritaire sans altérer la structure globale du jeu de données.
 
 Parmi les approches de suréchantillonnage, nous avons retenu deux techniques largement reconnues : \gls{smote} (Synthetic Minority Over-sampling Technique)~\cite{chawla2002smote} et sa variante Borderline-\gls{smote}~\cite{han2005borderline}. Ces méthodes ont démontré leur efficacité dans plusieurs études pour améliorer la performance des modèles sur des jeux de données fortement déséquilibrés.
-\subsubsection{\gls{smote} — \textbf{Synthetic Minority Over-sampling Technique}}
+
+\subsubsection{SMOTE — \textbf{Synthetic Minority Over-sampling Technique}}
 
 \gls{smote}~\cite{chawla2002smote} est une méthode de suréchantillonnage qui vise à résoudre les problèmes de déséquilibre de classes dans les jeux de données, en particulier ceux où les classes minoritaires sont sous-représentées. Contrairement à des approches plus simples, comme la duplication aléatoire d’exemples minoritaires, \gls{smote} génère de nouveaux exemples synthétiques par interpolation, ce qui introduit une plus grande diversité dans les données.
 
@@ -834,6 +839,26 @@ En plus des performances de classification, l’évaluation a également porté 
 
 Une comparaison détaillée entre les différentes combinaisons d’architectures et d’embeddings sera présentée dans les sections suivantes, en lien avec les performances obtenues et les métriques d’évaluation spécifiques à chaque tâche.
 
+\section{Méthodologie d'entraînement}
+
+L’entraînement du modèle a suivi une méthodologie en plusieurs étapes, inspirée des pratiques standards pour l'évaluation de modèles d'apprentissage automatique, comme décrit par Geurts et Wehenkel~\cite{geurts2006}. Cette approche comprend les étapes suivantes :
+
+\begin{enumerate}
+    \item \textit{Entraînement des modèles} : Tous les modèles ont été entraînés sur le jeu de données d'apprentissage, en utilisant différents algorithmes et/ou différentes valeurs de complexité. Cette étape permet de comparer les performances des différents modèles selon leur capacité à apprendre les patterns dans les données.
+
+    \item \textit{Sélection du meilleur modèle} : Après l'entraînement initial, le modèle ayant obtenu les meilleures performances sur le jeu de validation a été sélectionné. Cette étape permet de choisir le modèle le plus performant tout en évitant le sur-apprentissage grâce à l'utilisation d'un jeu de validation distinct.
+
+    \item \textit{Optimisation des hyperparamètres avec Grid Search} : Après la sélection du modèle, une phase d'optimisation des hyperparamètres a été réalisée à l'aide de la méthode \textit{Grid Search}. Cette méthode consiste à effectuer une recherche exhaustive sur un ensemble prédéfini d'hyperparamètres pour chaque modèle, dans le but de maximiser les performances. En utilisant le jeu de validation, \textit{Grid Search} explore toutes les combinaisons possibles des hyperparamètres pour trouver la meilleure configuration, garantissant ainsi une performance optimale du modèle.
+
+    \item \textit{Réentraînement sur l'ensemble des données} : Une fois les meilleurs hyperparamètres identifiés via \textit{Grid Search}, le modèle a été réentraîné en utilisant l'ensemble des données disponibles, soit la combinaison du jeu de données d'apprentissage et du jeu de validation. Cette étape permet de maximiser l’utilisation des données pour améliorer la performance du modèle.
+
+    \item \textit{Test sur le jeu de test} : Après le réentraînement, le modèle a été testé sur un jeu de test distinct afin d’évaluer sa capacité à généraliser sur de nouvelles données, ce qui permet d’obtenir une estimation précise de la performance du modèle.
+
+    \item \textit{Réentraînement final} : Enfin, après l'évaluation finale, le modèle a été réentraîné pour une dernière itération en utilisant l'intégralité des données disponibles. Cette dernière étape permet de tirer le meilleur parti des données avant l’application du modèle à de nouveaux jeux de données ou scénarios réels.
+\end{enumerate}
+
+Cette méthodologie permet de garantir que le modèle est non seulement performant, mais aussi robuste et capable de généraliser sur des données inconnues, en suivant un processus rigoureux d'entraînement et de validation.
+
 \section{Métriques d’évaluation pour la classification de textes biomédicaux}
 
 Dans le cadre de la classification de textes, en particulier dans des domaines spécialisés comme la biomédecine, le choix des métriques d’évaluation est crucial pour mesurer de manière fiable les performances des modèles. Comme l’ont souligné Saito et al.~\cite{saito2015precision}, les métriques traditionnelles comme l’\textbf{accuracy} peuvent être trompeuses dans des contextes de déséquilibre de classes, ce qui est fréquent en biomédecine ou en apprentissage avec peu d’exemples.
@@ -843,7 +868,7 @@ L’\textbf{accuracy}, définie comme le rapport entre les prédictions correcte
 Pour remédier à ces limites, la \textbf{balanced accuracy} a été introduite comme alternative plus équitable. Elle est définie comme la moyenne des rappels (\textit{recall}) pour chaque classe, permettant ainsi une évaluation robuste, même lorsque certaines classes sont fortement sous-représentées~\cite{brodersen2010balanced}. La formule de la balanced accuracy dans le cas binaire est donnée par :
 
 \[
-\text{Balanced Accuracy} = \frac{1}{2} \left( \frac{TP}{TP + FN} + \frac{TN}{TN + FP} \right)
+\textit{Balanced Accuracy} = \frac{1}{2} \left( \frac{TP}{TP + FN} + \frac{TN}{TN + FP} \right)
 \]
 
 où \( TP \) est le nombre de vrais positifs, \( FN \) le nombre de faux négatifs, \( TN \) le nombre de vrais négatifs et \( FP \) le nombre de faux positifs.
@@ -851,14 +876,117 @@ où \( TP \) est le nombre de vrais positifs, \( FN \) le nombre de faux négati
 Dans le cas de la classification multi-classes, la balanced accuracy est calculée en moyennant les rappels de chaque classe :
 
 \[
-\text{Balanced Accuracy} = \frac{1}{C} \sum_{i=1}^{C} \frac{TP_i}{TP_i + FN_i}
+\textit{Balanced Accuracy} = \frac{1}{C} \sum_{i=1}^{C} \frac{TP_i}{TP_i + FN_i}
 \]
 
 où \( C \) représente le nombre total de classes et \( TP_i \), \( FN_i \) sont respectivement les vrais positifs et les faux négatifs pour la classe \( c_i \).
 
 La \textbf{precision} et le \textbf{recall} sont deux métriques complémentaires : la première mesure la proportion de vrais positifs parmi les prédictions positives, tandis que la seconde mesure la proportion de vrais positifs correctement identifiés parmi tous les éléments réellement positifs. Le \textbf{F1-score}, leur moyenne harmonique, est recommandé dans les travaux récents sur la classification de textes en contexte médical, notamment par Jin et al.~\cite{jin2019recurrent}, car il pénalise les déséquilibres entre précision et rappel. 
 
-Enfin l'\gls{auc} (Area Under the Curve), et plus précisément l’AUC-ROC (Receiver Operating Characteristic), est une métrique utilisée pour évaluer la capacité d’un modèle à distinguer entre les classes positives et négatives. Elle mesure l’aire sous la courbe ROC, qui trace le taux de vrais positifs en fonction du taux de faux positifs. Une AUC proche de 1 indique un excellent pouvoir discriminant, tandis qu’une AUC de 0{,}5 correspond à une performance aléatoire. Comme l’ont montré Saito et Rehmsmeier~\cite{saito2015precision}, dans les contextes de fort déséquilibre de classes – comme en biomédecine –, l’AUC-PR (Precision-Recall) est souvent plus informative que l’AUC-ROC, car elle se concentre davantage sur les performances en ce qui concerne la classe positive rare.
+Enfin l'\gls{auc} (Area Under the Curve), et plus précisément l’AUC-ROC (Receiver Operating Characteristic), est une métrique utilisée pour évaluer la capacité d’un modèle à distinguer entre les classes positives et négatives. Elle mesure l’aire sous la courbe ROC, qui trace le taux de vrais positifs en fonction du taux de faux positifs. Une \gls{auc} proche de 1 indique un excellent pouvoir discriminant, tandis qu’une AUC de 0{,}5 correspond à une performance aléatoire. Comme l’ont montré Saito et Rehmsmeier~\cite{saito2015precision}, dans les contextes de fort déséquilibre de classes – comme en biomédecine –, l’AUC-PR (Precision-Recall) est souvent plus informative que l’AUC-ROC, car elle se concentre davantage sur les performances en ce qui concerne la classe positive rare.
+\section{Expérimentations}
+
+L’étude est scindée en deux grandes catégories : la classification \textit{binaire} et la classification \textit{multiclasses}. Cette séparation repose sur la nature des tâches, les objectifs de prédiction, les architectures de sortie des modèles, et les fonctions de perte utilisées.
+
+Dans la \textbf{classification binaire}, chaque exemple appartient à l’une des deux classes possibles : \texttt{Malaria} ou \texttt{Non-Malaria}. Le modèle utilise une unique sortie $ \hat{y} \in [0,1] $, interprétée comme la probabilité que l’entrée appartienne à la classe positive. On utilise alors la \textit{fonction de perte Binary Cross-Entropy (BCE)}, définie comme :
+
+\begin{equation}
+\mathcal{L}_{\text{BCE}}(y, \hat{y}) = - \left( y \cdot \log(\hat{y}) + (1 - y) \cdot \log(1 - \hat{y}) \right),
+\end{equation}
+
+où $ y \in \{0,1\} $ est la classe réelle et $ \hat{y} $ est la prédiction du modèle.
+
+À l’inverse, dans la \textbf{classification multiclasses}, chaque entrée appartient à une seule classe parmi $K > 2$ classes (par exemple, 9 maladies différentes). Le modèle produit alors un vecteur de scores $\hat{\mathbf{y}} = (\hat{y}_1, \hat{y}_2, \ldots, \hat{y}_K)$ normalisé par une \textit{fonction softmax} :
+
+\begin{equation}
+\hat{y}_k = \frac{\exp(z_k)}{\sum_{j=1}^{K} \exp(z_j)},
+\end{equation}
+
+où $z_k$ est la sortie non normalisée (logit) pour la classe $k$. La \textit{fonction de perte Cross-Entropy (CE)} est alors :
+
+\begin{equation}
+\mathcal{L}_{\text{CE}}(\mathbf{y}, \hat{\mathbf{y}}) = - \sum_{k=1}^{K} y_k \log(\hat{y}_k),
+\end{equation}
+
+où $\mathbf{y}$ est le vecteur one-hot de la vraie classe.
+
+Cette distinction structurelle influence plusieurs aspects du pipeline expérimental :
+\begin{itemize}
+    \item \textbf{Architecture de sortie} : une seule sortie avec activation sigmoïde pour le cas binaire, contre une couche de $K$ neurones avec softmax pour le multiclasses.
+    \item \textbf{Fonction de perte} : BCE pour binaire, CE pour multiclasses.
+    \item \textbf{Métriques d’évaluation} : les métriques telles que AUC, F1-score ou précision sont utilisées différemment selon les cas.
+\end{itemize}
+
+Pour ces raisons, nous présentons séparément les expérimentations liées à la classification binaire, puis celles concernant la classification multiclasses.
+
+
+\subsection{Résultats expérimentaux de la classification binaire}
+
+\subsubsection{Performances des modèles LSTM etGRU avec embeddings appris depuis zéro }
+
+Les performances des modèles LSTM et GRU, entraînés avec des embeddings appris depuis zéro à partir du texte brut, sont résumées dans le tableau suivant :
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\resizebox{1.05\textwidth}{!}{%
+\begin{tabular}{|l|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Embedding Type} & \textbf{Balanced Acc} & \textbf{F1 Score} & \textbf{Precision} & \textbf{Recall} & \textbf{AUC} & \textbf{Inf. Time (s)} & \textbf{Train Time (min)} \\
+\hline
+LSTM & Learned (from scratch, Raw Text, 200d) & 89.50\% & 84.60\% & 75.66\% & 95.94\% & 0.92 & 0.05 & 0.44 \\
+\hline
+GRU & Learned (from scratch, Raw Text, 200d) & 90.69\% & 87.11\% & 82.92\% & 91.74\% & 0.96 & \textbf{0.04} & \textbf{0.37} \\
+\hline
+\end{tabular}
+}
+\caption{Résultats obtenus pour la classification binaire avec embeddings appris depuis zéro sur l'ensemble de test.}
+\label{tab:model_performance}
+\end{table}
+
+Ces résultats indiquent que le modèle GRU surpasse légèrement le LSTM sur toutes les métriques, en particulier en précision (\textit{precision}), F1 score et AUC. De plus, il présente un temps d’inférence et d’entraînement légèrement inférieur, ce qui en fait une architecture plus efficace dans ce contexte.
+
+Ces performances confirment la capacité des modèles RNN à capturer efficacement la structure du langage biomédical même à partir d’embeddings non pré-entraînés, bien que leur efficacité puisse être encore améliorée par l'intégration d'embeddings spécialisés.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{No_Embeddings_GRU.png}
+\caption{Projection t-SNE des représentations textuelles avant entraînement (à gauche, embeddings non ajustés) et durant le forward pass (à droite, avec le modèle GRU).}
+\label{fig:tsne_gru}
+\end{figure}
+
+La figure \ref{fig:tsne_gru} illustre, à gauche, les représentations des textes avant toute phase d'entraînement, c’est-à-dire lorsque les vecteurs d'embedding sont encore initialisés aléatoirement. À droite, on peut observer les représentations des mêmes textes après avoir effectué le forward pass dans le modèle GRU, lorsque les embeddings ont été ajustés au cours de l'entraînement.
+
+On observe que les deux classes (0.0 et 1.0) sont fortement entremêlées dans l’espace de représentation avant l'entraînement, ce qui est attendu, car à ce stade, les vecteurs de mots ne possèdent aucune information discriminante permettant de différencier les classes. Le modèle n’a pas encore appris à représenter les documents en fonction de leur contenu sémantique pertinent pour la tâche de classification.
+
+Après le forward pass, une dispersion des clusters devient visible. Les représentations des textes commencent à se séparer, formant des groupes distincts, bien que quelques zones présentent encore un chevauchement entre les classes. Ce phénomène est particulièrement intéressant, car il justifie les bonnes performances du modèle GRU, mesurées par la balanced accuracy et d'autres métriques. En effet, bien que les clusters ne soient pas complètement séparés, les zones de chevauchement sont suffisamment petites pour que le modèle puisse encore classifier de manière relativement précise, et ce, même si les frontières entre les classes ne sont pas parfaitement nettes.
+
+Cette visualisation met en évidence l'importance de la phase d'apprentissage : les couches RNN (LSTM ou GRU), combinées aux embeddings entraînés, doivent transformer ces représentations initialement chaotiques en espaces plus discriminants, capables de séparer efficacement les classes.
+
+Cependant, bien que ces résultats soient prometteurs, l'utilisation d'embeddings pré-entraînés pourrait améliorer davantage la performance des modèles. En effet, ces embeddings, qui ont été ajustés sur de vastes corpus de texte, capturent déjà une large gamme de relations sémantiques entre les mots. Intégrer de tels embeddings pourrait fournir au modèle des représentations plus riches et plus structurées des mots, permettant ainsi une meilleure généralisation et une séparation plus nette des classes dans l'espace de représentation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1234,6 +1362,11 @@ arXiv preprint, 2015.
 
 \bibitem{gu2020domain}
 Y. Gu, R. Tinn, H. Cheng, M. Lucas, N. Usuyama, X. Liu, T. Naumann, J. Gao, H. Poon, "Domain-specific language model pretraining for biomedical natural language processing," ACM Transactions on Computing for Healthcare (HEALTH), vol. 3, no. 1, pp. 1–23, 2020. \url{https://arxiv.org/abs/2007.15779}
+
+\begin{thebibliography}{99}
+    \bibitem{geurts2006} 
+    Geurts, P., \& Wehenkel, L. (2006). \textit{Learning with Decision Trees and Random Forests}. Institut Montefiore, University of Liège, Belgium.
+\end{thebibliography}
 
 
 
