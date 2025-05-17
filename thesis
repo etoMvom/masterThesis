@@ -23,6 +23,11 @@
     description={Modèle développé par Facebook AI pour des représentations vectorielles de mots prenant en compte les sous-mots}
 }
 
+\newglossaryentry{biowordvec}{
+    name={BioWordVec},
+    description={Embeddings de mots spécialisés pour le domaine biomédical, préentraînés sur de larges corpus biomédicaux en combinant des approches Word2Vec et FastText, permettant une meilleure représentation sémantique des termes médicaux et scientifiques}
+}
+
 \newacronym{tln}{TALN}{Traitement Automatique du Langage Naturel}
 \newacronym{ia}{IA}{Intelligence Artificielle}
 \newacronym{rnn}{RNN}{Réseau de Neurones Récurrents}
@@ -431,7 +436,7 @@ Le processus débute par une tokenisation via WordPiece (figure.~\ref{fig:wordpi
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{tokenization_bert.png}
+    \includegraphics[width=0.5\textwidth]{tokenization_bert.png}
     \caption{Illustration du processus de tokenisation WordPiece suivi par l'encodage et les couches Transformer. Source : \url{https://research.googleblog.com/2021/12/a-fast-wordpiece-tokenization-system.html}}
     \label{fig:wordpiece}
 \end{figure}
@@ -660,7 +665,7 @@ En définitive, l’article de Elman constitue une pierre angulaire du développ
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.4\linewidth]{rnn_elman.png}
+\includegraphics[width=0.3\linewidth]{rnn_elman.png}
 \caption{Réseau récurrent simple selon Elman~\cite{elman1990finding}. Les activations de la couche cachée sont transférées à la couche de contexte avec un poids fixe de 1. Les connexions en pointillés sont les poids entraînables du réseau.}
 \label{fig:elman_rnn}
 \end{figure}
@@ -679,7 +684,7 @@ L’innovation majeure introduite par les auteurs réside dans l’utilisation d
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{bilstm.png}
+    \includegraphics[width=0.5\textwidth]{bilstm.png}
     \caption{Architecture du modèle BLSTM-2DCNN pour une séquence de sept mots. Les vecteurs de mots ont une dimension de 3, et le BiLSTM comporte 5 unités cachées. La hauteur et la largeur des filtres convolutifs et des opérations de max pooling sont fixées à 2~\cite{zhou2015text}.}
     \label{fig:bilstm-arch}
 \end{figure}
@@ -754,6 +759,8 @@ Enfin, la figure~\ref{fig:biobert_results}(c) compare directement les performanc
 
 \section{Analyse exploratoire des données}
 
+Les jeux de données analysés contiennent plusieurs variables textuelles ou métadonnées, décrites dans le tableau~\ref{tab:variables}. Parmi celles-ci, la variable \texttt{Abstract} a été retenue comme unique source d'information pour les tâches de classification. Elle contient un résumé riche et complet de l’article, intégrant la majorité des informations essentielles — y compris celles souvent redondantes avec les mots-clés ou les termes MeSH. Par conséquent, aucune procédure de sélection automatique de variables n’a été nécessaire. Ce choix permet de concentrer le traitement sur une seule séquence textuelle cohérente, tout en assurant une standardisation du pipeline de prétraitement.
+
 Cette section propose une analyse exploratoire des deux jeux de données extraits de PubMed, contenant des résumés d’articles scientifiques liés à diverses pathologies. L’objectif est de mieux comprendre la structure des données, d’identifier des déséquilibres de classes, et de repérer certaines tendances textuelles pouvant influencer la performance des modèles.
 
 Les deux jeux de données partagent les mêmes variables principales, notamment : un identifiant unique (\texttt{PMID}), le \texttt{Titre} de l’article, le \texttt{Résumé} (\texttt{Abstract}), les \texttt{Mots-clés}, l’année de publication (\texttt{PublicationYear}), les \texttt{MeSH Terms}, ainsi que l’étiquette de classe (\texttt{Label}). Une description complète de ces variables est disponible en annexe (voir Table~\ref{tab:variables}).
@@ -801,7 +808,7 @@ Les résultats des nuages de mots pour chaque tâche de classification sont disp
 
 Dans le cadre des expériences impliquant des modèles entraînés sans embeddings préexistants (learn from scratch), ainsi que ceux utilisant des représentations vectorielles statiques telles que \gls{glove} et \gls{fasttext}, un pipeline spécifique de préparation des données a été développé. Ce pipeline inclut plusieurs étapes essentielles : la tokenisation des textes, la création d’un vocabulaire à partir du corpus d'entraînement, l'encodage des séquences en indices numériques, ainsi que le padding pour garantir une longueur uniforme des séquences. Un seuil de fréquence minimale est appliqué pour éliminer les mots rares, tandis que les termes absents du vocabulaire sont remplacés par un jeton spécial \texttt{<UNK>}. Les séquences sont ensuite converties en tenseurs, ce qui les rend compatibles avec l'entraînement de réseaux de neurones. Cette approche vise à fournir une représentation normalisée et cohérente du texte, particulièrement adaptée pour l’entraînement de modèles légers ou d’architectures récurrentes (\gls{lstm}/\gls{gru}), que ce soit avec des embeddings appris durant l’entraînement ou initialisés avec des matrices pré-entraînées comme celles de \gls{glove} ou \gls{fasttext}.
 
-Lors des expériences impliquant des modèles utilisant des embeddings contextuels, un pipeline distinct est mis en place. Celui-ci repose sur l’utilisation d'un tokeniseur adapté, qui transforme chaque texte brut en une séquence de tokens, puis génère les identifiants d'entrée et les masques d'attention nécessaires. Le tokeniseur prend également en charge le padding et la troncature des séquences à une longueur maximale de 400 tokens, garantissant ainsi une taille uniforme des entrées. Ensuite, ces données sont intégrées dans une classe de dataset personnalisée, permettant de préparer les textes pour des modèles utilisant des embeddings contextuels. Les étiquettes de classification sont ajoutées sous forme de tenseurs, et chaque entrée est ainsi représentée par ses identifiants de tokens, ses masques d'attention et ses étiquettes correspondantes. Ce pipeline est conçu pour traiter efficacement des textes longs et complexes, tout en optimisant l'intégration des embeddings contextuels pour des modèles de classification multiclasses (voir Figure~\ref{fig:contextual_pipeline} pour une illustration détaillée du pipeline).
+Lors des expériences impliquant des modèles utilisant des embeddings contextuels, un pipeline distinct est mis en place. Celui-ci repose sur l’utilisation d'un tokeniseur adapté, qui transforme chaque texte brut en une séquence de tokens, puis génère les identifiants d'entrée et les masques d'attention nécessaires. Le tokeniseur prend également en charge le padding et la troncature des séquences à une longueur maximale de 400 tokens, garantissant ainsi une taille uniforme des entrées. Ensuite, ces données sont intégrées dans une classe de dataset personnalisée, permettant de préparer les textes pour des modèles utilisant des embeddings contextuels. Les étiquettes de classification sont ajoutées sous forme de tenseurs, et chaque entrée est ainsi représentée par ses identifiants de tokens, ses masques d'attention et ses étiquettes correspondantes. 
 
 \section{Présentation des architectures et types d’embeddings}
 
@@ -884,11 +891,12 @@ où \( C \) représente le nombre total de classes et \( TP_i \), \( FN_i \) son
 La \textbf{precision} et le \textbf{recall} sont deux métriques complémentaires : la première mesure la proportion de vrais positifs parmi les prédictions positives, tandis que la seconde mesure la proportion de vrais positifs correctement identifiés parmi tous les éléments réellement positifs. Le \textbf{F1-score}, leur moyenne harmonique, est recommandé dans les travaux récents sur la classification de textes en contexte médical, notamment par Jin et al.~\cite{jin2019recurrent}, car il pénalise les déséquilibres entre précision et rappel. 
 
 Enfin l'\gls{auc} (Area Under the Curve), et plus précisément l’AUC-ROC (Receiver Operating Characteristic), est une métrique utilisée pour évaluer la capacité d’un modèle à distinguer entre les classes positives et négatives. Elle mesure l’aire sous la courbe ROC, qui trace le taux de vrais positifs en fonction du taux de faux positifs. Une \gls{auc} proche de 1 indique un excellent pouvoir discriminant, tandis qu’une AUC de 0{,}5 correspond à une performance aléatoire. Comme l’ont montré Saito et Rehmsmeier~\cite{saito2015precision}, dans les contextes de fort déséquilibre de classes – comme en biomédecine –, l’AUC-PR (Precision-Recall) est souvent plus informative que l’AUC-ROC, car elle se concentre davantage sur les performances en ce qui concerne la classe positive rare.
+
 \section{Expérimentations}
 
 L’étude est scindée en deux grandes catégories : la classification \textit{binaire} et la classification \textit{multiclasses}. Cette séparation repose sur la nature des tâches, les objectifs de prédiction, les architectures de sortie des modèles, et les fonctions de perte utilisées.
 
-Dans la \textbf{classification binaire}, chaque exemple appartient à l’une des deux classes possibles : \texttt{Malaria} ou \texttt{Non-Malaria}. Le modèle utilise une unique sortie $ \hat{y} \in [0,1] $, interprétée comme la probabilité que l’entrée appartienne à la classe positive. On utilise alors la \textit{fonction de perte Binary Cross-Entropy (BCE)}, définie comme :
+Dans la \textbf{classification binaire}, chaque exemple appartient à l’une des deux classes possibles : \texttt{Malaria} ou \texttt{Non-Malaria} \autoref{tab:binary_classes}. Le modèle utilise une unique sortie $ \hat{y} \in [0,1] $, interprétée comme la probabilité que l’entrée appartienne à la classe positive. On utilise alors la \textit{fonction de perte Binary Cross-Entropy (BCE)}, définie comme :
 
 \begin{equation}
 \mathcal{L}_{\text{BCE}}(y, \hat{y}) = - \left( y \cdot \log(\hat{y}) + (1 - y) \cdot \log(1 - \hat{y}) \right),
@@ -896,7 +904,7 @@ Dans la \textbf{classification binaire}, chaque exemple appartient à l’une de
 
 où $ y \in \{0,1\} $ est la classe réelle et $ \hat{y} $ est la prédiction du modèle.
 
-À l’inverse, dans la \textbf{classification multiclasses}, chaque entrée appartient à une seule classe parmi $K > 2$ classes (par exemple, 9 maladies différentes). Le modèle produit alors un vecteur de scores $\hat{\mathbf{y}} = (\hat{y}_1, \hat{y}_2, \ldots, \hat{y}_K)$ normalisé par une \textit{fonction softmax} :
+À l’inverse, dans la \textbf{classification multiclasses}, chaque entrée appartient à une seule classe parmi $K > 2$ classes (par exemple, 9 maladies différentes \autoref{tab:multiclass_classes}). Le modèle produit alors un vecteur de scores $\hat{\mathbf{y}} = (\hat{y}_1, \hat{y}_2, \ldots, \hat{y}_K)$ normalisé par une \textit{fonction softmax} :
 
 \begin{equation}
 \hat{y}_k = \frac{\exp(z_k)}{\sum_{j=1}^{K} \exp(z_j)},
@@ -946,7 +954,7 @@ GRU & Learned (from scratch, Raw Text, 200d) & \textbf{90.69\%} & \textbf{87.11\
 
 Ces performances ont été obtenues après une phase d’optimisation des hyperparamètres sur l’ensemble de validation. Les meilleures configurations identifiées pour chaque modèle sont présentées dans le tableau placé en annexe (\autoref{tab:model-config}).
 
-Ces résultats montrent que le modèle GRU surpasse légèrement le LSTM sur l’ensemble des métriques principales, notamment le F1 score (\textbf{87.11\%}), la précision (\textbf{82.92\%}) et l’AUC (\textbf{0.96}), tout en présentant un temps d’inférence plus faible (0.04s) et un nombre total de paramètres légèrement réduit (8,58M vs 8,77M). Cette efficacité peut être en partie attribuée à l’utilisation du même taux de dropout élevé (0.8) pour les deux modèles, jouant un rôle crucial dans la régularisation, et à une meilleure capacité du GRU à modéliser des séquences de manière plus compacte.
+Ces résultats montrent que le modèle GRU surpasse légèrement le LSTM sur l’ensemble des métriques principales, notamment le F1 score (87.11\%), la précision (82.92\%) et l’AUC (0.96), tout en présentant un temps d’inférence plus faible (0.04s) et un nombre total de paramètres légèrement réduit (8,58M vs 8,77M). Cette efficacité peut être en partie attribuée à l’utilisation du même taux de dropout élevé (0.8) pour les deux modèles, jouant un rôle crucial dans la régularisation, et à une meilleure capacité du GRU à modéliser des séquences de manière plus compacte. Les résultats de cette configuration sont également intégrés à la figure~\ref{fig:model_performances_binary}, qui offre une vue d’ensemble comparative des performances de tous les modèles testés. Cette représentation graphique permet de visualiser rapidement les écarts entre les approches avec embeddings appris et celles utilisant des embeddings pré-entraînés, en mettant en évidence les gains ou pertes de performance selon les métriques clés.
 
 \begin{figure}[H]
 \centering
@@ -955,11 +963,11 @@ Ces résultats montrent que le modèle GRU surpasse légèrement le LSTM sur l�
 \label{fig:tsne_gru}
 \end{figure}
 
-La figure \ref{fig:tsne_gru} illustre l’évolution des représentations au cours de l’apprentissage. À gauche, les embeddings sont initialisés aléatoirement et ne présentent aucune organisation discernable entre les classes. À droite, après passage dans le GRU entraîné, les documents sont projetés dans un espace où les clusters de classes apparaissent plus clairement séparés, malgré quelques zones de chevauchement.
+La figure \ref{fig:tsne_gru} illustre l’évolution des représentations au cours de l’apprentissage. À gauche, les embeddings sont initialisés aléatoirement et ne présentent aucune organisation discernable entre les classes, ce qui reflète l’absence de connaissance sémantique préalable. À droite, après passage dans le GRU entraîné, les documents sont projetés dans un espace latent où les clusters de classes apparaissent plus clairement séparés, malgré quelques zones de chevauchement.
 
 Cela confirme que, même en partant de représentations totalement vierges, le modèle GRU parvient à construire un espace latent relativement discriminant. Les bonnes performances observées dans le tableau \ref{tab:model_performance_scratch} sont donc cohérentes avec cette transformation spatiale.
 
-Néanmoins, malgré ces résultats prometteurs, les modèles entraînés avec des embeddings appris depuis zéro restent légèrement en retrait par rapport aux versions utilisant des embeddings pré-entraînés. Cela s’explique par l’absence de connaissance sémantique initiale dans les embeddings aléatoires, contrairement à GloVe ou FastText qui encapsulent déjà une structure linguistique issue de grands corpus. En ce sens, l'intégration d'embeddings spécialisés, éventuellement ajustés sur des corpus biomédicaux, représenterait une piste intéressante pour améliorer encore les performances.
+Néanmoins, malgré ces résultats prometteurs, les modèles entraînés avec des embeddings appris depuis zéro restent légèrement en retrait par rapport aux versions utilisant des embeddings pré-entraînés tels que GloVe ou FastText. Ces derniers encapsulent une structure linguistique riche issue de grands corpus, conférant une connaissance sémantique initiale que les embeddings aléatoires ne possèdent pas. En ce sens, l’intégration d’embeddings spécialisés, notamment ajustés sur des corpus biomédicaux, représenterait une piste intéressante pour améliorer encore les performances.
 
 \subsubsection{Performances des modèles LSTM et GRU avec word embeddings : GloVe et FastText}
 
@@ -987,9 +995,9 @@ GRU & GloVe (300d) & \textbf{90.70\%} & \textbf{87.75\%} & \textbf{86.53\%} & 89
 \label{tab:pretrained_embeddings}
 \end{table}
 
-Ces performances ont été obtenues à l’issue d’une phase d’optimisation des hyperparamètres sur l’ensemble de validation. Les configurations exactes des modèles et leurs paramètres optimaux sont disponibles en annexe dans le tableau~\autoref{tab:model-config}.
+Ces performances ont été obtenues à l’issue d’une phase d’optimisation des hyperparamètres sur l’ensemble de validation. Les configurations exactes des modèles et leurs paramètres optimaux sont disponibles en annexe dans le tableau \autoref{tab:model-config}.
 
-L’analyse conjointe des résultats montre que les meilleures performances sont obtenues avec la combinaison GRU + GloVe. Cette configuration offre un excellent compromis entre précision (86.53\%), rappel (89.01\%) et temps d'inférence rapide (0.04s), tout en conservant un nombre modéré de paramètres (12,7M). Le taux de dropout élevé (0.8) dans ce cas agit efficacement comme régularisation, et l’optimiseur Adam combiné à un taux d’apprentissage de $1e^{-3}$ semble bien adapté.
+L’analyse conjointe des résultats montre que les meilleures performances sont obtenues avec la combinaison GRU + GloVe. Cette configuration offre un excellent compromis entre précision (86.53\%), rappel (89.01\%) et temps d'inférence rapide (0.04s), tout en conservant un nombre modéré de paramètres (12,7M). Le taux de dropout élevé (0.8) dans ce cas agit efficacement comme régularisation, et l’optimiseur Adam combiné à un taux d’apprentissage de $1e^{-3}$ semble bien adapté. Une synthèse visuelle des résultats de performance pour ces configurations est présentée dans la figure~\ref{fig:model_performances_binary}, qui regroupe les principales métriques sous forme d’histogrammes comparatifs. Cette figure permet une lecture rapide des différences de performances entre les modèles GRU et LSTM, selon le type d’embedding utilisé (GloVe, FastText ou embeddings appris).
 
 \begin{figure}[H]
 \centering
@@ -1006,9 +1014,9 @@ Les résultats présentés dans les tableaux~\ref{tab:pretrained_embeddings} et~
 
 En termes de précision, le GRU entraîné avec des embeddings appris (82.92\%) reste légèrement en retrait par rapport à sa version avec GloVe (86.53\%), mais compense avec un temps d’apprentissage plus court (0.37 min vs 0.43 min) et une inférence tout aussi rapide (0.04 s). Du côté du LSTM, les différences sont un peu plus marquées : le modèle avec GloVe surpasse celui avec embeddings appris sur toutes les métriques sauf le rappel, où le LSTM « from scratch » atteint un score impressionnant de 95.94\%, indiquant une très bonne capacité de détection des cas positifs.
 
-\subsubsection{Performances des modèles GRU avec les embeddings contextuels : PubMedBERT et BioBERT}
+\subsubsection{Performances des modèles GRU bidirectionnels avec l'attention de Bahdanau, les embeddings contextuels (PubMedBERT et BioBERT) et les words embeddings (Glove et FastText)}
 
-Dans cette section, nous présentons les performances des modèles GRU bidirectionnel noté ici \texttt{BiGRU} utilisant des embeddings contextuels spécialisés, à savoir \gls{pubmedbert} et \gls{biobert}, qui ont été préalablement entraînés sur des corpus biomédicaux. Ces modèles sont particulièrement adaptés aux tâches de classification dans le domaine de la santé, car ils intègrent une compréhension fine du vocabulaire et des relations sémantiques propres au domaine biomédical.
+Dans cette section, nous présentons les performances des modèles GRU bidirectionnel, noté ici \texttt{BiGRU}, utilisant des embeddings contextuels spécialisés, à savoir \gls{pubmedbert} et \gls{biobert}, qui ont été préalablement entraînés sur des corpus biomédicaux. Ces modèles sont particulièrement adaptés aux tâches de classification dans le domaine de la santé, car ils intègrent une compréhension fine du vocabulaire et des relations sémantiques propres au domaine biomédical.
 
 Les résultats des différentes configurations du modèle BiGRU avec les embeddings GloVe, FastText, PubMedBERT et BioBERT sont synthétisés dans le tableau~\ref{tab:biGRU_performance_contextual_embeddings}.
 
@@ -1034,13 +1042,402 @@ BiGRU + Bahdanau & BioBERT (768d) & \textbf{96.10\%} & \textbf{98.00\%} & 97.00\
 \label{tab:biGRU_performance_contextual_embeddings}
 \end{table}
 
-Les résultats obtenus montrent des performances remarquables pour les modèles (dont les hyperparamètres sont dans (\autoref{tab:model-config})) utilisant des embeddings contextuels, en particulier \gls{biobert} et \gls{pubmedbert}. Ces configurations surpassent largement les versions utilisant des embeddings classiques comme GloVe ou FastText. Le modèle \textit{BiGRU + BioBERT} atteint un F1 score de 98.00\%, avec une précision de 97.00\% et un rappel de 98.00\%, démontrant une capacité exceptionnelle à détecter les classes positives, ce qui est crucial dans les domaines médicaux. Le modèle \textit{BiGRU + PubMedBERT}, quant à lui, enregistre un F1 score de 97.72\%, avec une précision de 97.05\% et un rappel atteignant 98.40\%.
+Les résultats obtenus montrent des performances remarquables pour les modèles (dont les hyperparamètres sont précisés dans le tableau~\ref{tab:model-config}) utilisant des embeddings contextuels, en particulier \gls{biobert} et \gls{pubmedbert}. Ces configurations surpassent nettement les versions utilisant des embeddings classiques comme GloVe ou FastText.
 
-Les deux modèles contextuels présentent également un AUC très élevé : 0.99 pour BioBERT et 1.00 pour PubMedBERT, illustrant leur excellente capacité de discrimination. En revanche, leur coût en temps d'entraînement est significatif (environ 70 minutes), et le temps d'inférence est d’environ 1.67 secondes, ce qui reste raisonnable au vu des performances obtenues.
+Le modèle \textit{BiGRU + BioBERT} atteint un F1 score de 98.00\%, avec une précision de 97.00\% et un rappel de 98.00\%, illustrant une très grande capacité à détecter les classes positives, un aspect essentiel dans les applications biomédicales. Le modèle \textit{BiGRU + PubMedBERT}, quant à lui, enregistre un F1 score de 97.72\%, avec un rappel légèrement supérieur (98.40\%).
 
-En comparaison, les modèles utilisant GloVe et FastText obtiennent des résultats légèrement inférieurs, avec un F1 score respectif de 96.50\% et 96.91\%, tout en offrant des avantages en termes de rapidité d'entraînement (moins de 5 minutes) et d'inférence (inférieure à 0.05 secondes). Cela met en lumière un compromis entre performance et coût computationnel.
+Il est particulièrement intéressant de comparer ces deux modèles en tenant compte non seulement de leurs performances, mais aussi de leur complexité et de leur mode d'intégration. En effet, dans le cas du modèle basé sur PubMedBERT, l'encodeur BERT a été utilisé en tant que composant gelé, c’est-à-dire que ses poids n'ont pas été mis à jour durant l'entraînement du modèle BiGRU. Cela se reflète directement dans le nombre total de paramètres entraînables : seulement \textbf{1,708,033} pour \textit{BiGRU + PubMedBERT}, contre \textbf{110,018,305} pour \textit{BiGRU + BioBERT}, dans lequel l’encodeur BERT a été fine-tuné conjointement avec le reste du modèle. Cette distinction est cruciale pour évaluer le coût réel de l'apprentissage et la capacité du modèle à s’adapter à la tâche cible.
 
-Par conséquent, les résultats confirment que les modèles basés sur des embeddings contextuels spécialisés, comme BioBERT, sont particulièrement efficaces pour la classification de textes biomédicaux. Malgré leur exigence en ressources, leur précision et leur capacité à saisir les subtilités du langage biomédical justifient leur utilisation dans des contextes où la fiabilité des prédictions est essentielle.
+Par ailleurs, cette architecture gelée de PubMedBERT a initialement été testée dans le cadre d’une classification binaire, où elle a permis d’identifier clairement l’impact de l'entraînement (ou non) des couches BERT sur les métriques finales, mais aussi sur les temps d’entraînement et d’inférence. Les résultats de cette évaluation sont présentés dans la figure~\ref{fig:model_performances_binary}, qui compare directement les performances des différentes configurations de modèles dans ce cadre binaire.
+
+Enfin, il est important de noter que les représentations issues des modèles BERT sont déjà organisées de manière structurelle, comme le confirment les visualisations par t-SNE (voir figure~\ref{fig:tsne_lstm_glove}). Cette structure facilite la séparation des classes même avant fine-tuning, à la différence des embeddings appris depuis zéro où aucune organisation claire n’apparaît initialement (figure~\ref{fig:tsne_gru}).
+
+Les deux modèles contextuels présentent un AUC très élevé : 0.99 pour BioBERT et 1.00 pour PubMedBERT, attestant de leur grande capacité de discrimination. En contrepartie, leur temps d'entraînement est significativement plus long (environ 70 minutes), bien que leur temps d’inférence (1.67 secondes) reste acceptable pour des applications en environnement clinique.
+
+En résumé, cette analyse comparative montre que, malgré un coût computationnel nettement plus élevé, les modèles basés sur des embeddings contextuels spécialisés comme BioBERT (fine-tuné) offrent les meilleures performances. Toutefois, l’approche avec PubMedBERT gelé constitue une alternative viable dans des contextes où les ressources sont limitées, tout en bénéficiant de l'efficacité du langage pré-entraîné.
+
+\subsection{Étude de l’impact du déséquilibre des classes : rééchantillonnage et pondération des pertes}
+
+Dans le contexte de la classification de textes biomédicaux, le déséquilibre des classes peut fortement affecter les performances des modèles, en particulier sur les classes minoritaires. Or, certains modèles performants, notamment ceux basés sur des embeddings contextuels, sont très coûteux en ressources computationnelles, ce qui limite leur accessibilité et leur utilisation pratique dans certains contextes.
+
+Afin d’examiner si des méthodes classiques de lutte contre le déséquilibre telles que le rééchantillonnage (\gls{smote}, Borderline-\gls{smote}) ou la pondération des classes dans la fonction de perte peuvent améliorer les performances, nous évaluons ici leur impact à la fois sur la qualité des prédictions (métriques d’évaluation) mais aussi sur les coûts d’entraînement et d’inférence. Cette analyse est cruciale pour déterminer si des techniques plus légères peuvent constituer une alternative intéressante, notamment lorsque les ressources disponibles sont limitées ou que l’utilisation de modèles lourds n’est pas envisageable.
+
+Nous nous concentrons particulièrement sur les architectures LSTM et GRU avec embeddings appris depuis zéro (section~4.6.1.1), puis sur celles utilisant des embeddings statiques pré-entraînés comme GloVe et FastText (section~4.6.1.2), afin d’évaluer la pertinence et l’efficacité de ces méthodes de gestion du déséquilibre dans des contextes aux contraintes computationnelles variées.
+
+\begin{table}[H]
+\centering
+\scriptsize
+\caption{Performance of LSTM and GRU models with different resampling and weighting strategies (binary classification)}
+\begin{tabular}{|l|l|c|c|c|c|}
+\hline
+\textbf{Training Strategy} & \textbf{Model} & \textbf{Accuracy} & \textbf{F1-score} & \textbf{Balanced Acc} & \textbf{Recall} \\
+\hline
+No resampling & LSTM & 90.70\% & 87.23\% & 90.46\% & 89.64\% \\
+No resampling & GRU  & 91.74\% & 88.76\% & 91.81\% & 92.02\% \\
+\hline
+SMOTE & LSTM & 89.66\% & 86.40\% & 90.35\% & 92.72\% \\
+SMOTE & GRU  & \textbf{92.04\%} & \textbf{89.09\%} & \textbf{91.96\%} & 91.67\% \\
+\hline
+Borderline-SMOTE & LSTM & 90.45\% & 87.25\% & 90.84\% & 92.16\% \\
+Borderline-SMOTE & GRU  & 90.92\% & 87.87\% & 91.35\% & 92.79\% \\
+\hline
+Class Weights & LSTM & 90.13\% & 87.32\% & 91.43\% & \textbf{95.87\%} \\
+Class Weights & GRU  & 91.97\% & 88.83\% & 91.55\% & 90.13\% \\
+\hline
+\end{tabular}
+\label{tab:performance_resampling}
+\end{table}
+
+La \textbf{Table~\ref{tab:performance_resampling}} présente les performances des modèles LSTM et GRU entraînés selon différentes stratégies de gestion du déséquilibre des classes, notamment par rééchantillonnage (\textit{SMOTE}, \textit{Borderline-SMOTE}) et par pondération des classes dans la fonction de perte. Ces résultats sont également synthétisés visuellement dans la figure~\ref{fig:resampling}, qui met en évidence les effets de ces techniques sur les principales métriques de performance.
+
+On observe que ces méthodes permettent d’améliorer certaines métriques clés, en particulier le rappel des classes minoritaires, sans compromettre la performance globale. Par exemple, le modèle GRU associé à SMOTE atteint une F1-score de 89.09\%et un rappel de 91.67\%, traduisant un bon équilibre entre précision et sensibilité. De même, le LSTM avec pondération des classes obtient un rappel exceptionnel de 95.87\%, ce qui est crucial dans des scénarios où la détection des cas rares est prioritaire.
+
+Par ailleurs, les temps d’entraînement et d’inférence demeurent comparables aux versions de base (cf. sections~4.6.1.1 et~4.6.1.2), ce qui montre que ces techniques n'engendrent pas de surcoût computationnel significatif, et peuvent donc être facilement intégrées à des pipelines existants, y compris dans des environnements contraints.
+
+Cependant, les gains observés avec SMOTE restent relativement modestes au regard de son potentiel théorique. Cette limite peut s'expliquer à la lumière des visualisations t-SNE (Figures~\ref{fig:tsne_gru} et~\ref{fig:tsne_lstm_glove}). Celles-ci révèlent que, bien que les modèles GRU et LSTM parviennent à structurer un espace latent relativement discriminant, des zones de chevauchement entre classes subsistent. Or, SMOTE repose sur l’hypothèse que les exemples proches dans l’espace des représentations appartiennent à la même classe, ce qui n’est pas toujours vrai dans des configurations à forte ambiguïté sémantique. En interpolant dans ces zones frontières, SMOTE peut involontairement générer des exemples ambigus, nuisant à l’apprentissage plutôt que de le renforcer.
+
+En définitive, les approches par rééchantillonnage et pondération constituent des solutions simples, peu coûteuses et efficaces pour atténuer l’impact du déséquilibre, en particulier dans les cas où l’usage de modèles à embeddings contextuels lourds est prohibitif. Leur intégration se justifie d’autant plus qu’elles s’appuient sur des mécanismes génériques, adaptables à divers modèles et jeux de données.
+
+\subsection{Apprentissage par petites touches (Few-Shot Learning)}
+
+L’apprentissage par petites touches, ou \gls{fsl}, constitue une approche prometteuse dans les contextes à faibles ressources, en particulier pour la classification de maladies rares. Cette section évalue les capacités de généralisation de plusieurs modèles de classification \textit{binaire} lorsqu’ils sont entraînés avec un nombre limité d’exemples par classe (\textit{k-shot}).
+
+Dans le cadre de notre investigation sur la capacité des modèles à \textit{généraliser} dans des conditions de données limitées, nous avons exceptionnellement introduit un modèle supplémentaire, \textit{CNN+LSTM}, combinant des couches convolutionnelles et récurrentes. Ce choix visait à accroître la complexité architecturale des modèles testés, afin d’explorer dans quelle mesure une structure plus expressive pouvait améliorer la généralisation en few-shot learning.
+
+La Figure~\ref{fig:kshot_binary} illustre les performances comparées de plusieurs architectures sur cinq métriques : F1-score, Balanced Accuracy, Recall, Précision et Accuracy sur l’ensemble de test. Chaque ligne correspond à un modèle différent, et chaque colonne à une métrique. Ces résultats permettent d’analyser la stabilité, l’évolution avec $k$ et la performance globale de chaque approche.
+
+Le modèle \textit{GRU-FastText} présente des résultats très faibles et peu évolutifs. F1, Recall et Balanced Accuracy stagnent autour de 0.2 à 0.3, quelle que soit la valeur de $k$, traduisant une incapacité du modèle à exploiter les faibles quantités d’exemples. Le modèle \textit{GRU-GloVe} ne fait pas mieux, montrant une instabilité importante et des métriques proches du hasard.
+
+Le \textit{CNN+LSTM} est légèrement plus stable, avec une progression marginale pour les plus grands $k$, mais reste insuffisant avec un F1 inférieur à 0.25 même à $k=500$. Ce résultat suggère que, malgré sa complexité accrue, cette architecture n’est pas nécessairement mieux adaptée au contexte de few-shot learning binaire.
+
+Le modèle \textit{GRU-BaselineFastText} affiche une amélioration progressive avec $k$, surtout en Recall et F1, bien que les valeurs absolues restent modestes (inférieures à 0.4).
+
+Le modèle \textit{GRU-BaselineGloVe}, quant à lui, se démarque clairement. Il montre une progression régulière sur toutes les métriques, atteignant un F1 supérieur à 0.7 et une Balanced Accuracy proche de 0.9 pour $k=500$, ce qui suggère une bonne aptitude à généraliser à partir de peu d’exemples.
+
+Ces tendances sont confirmées par la Figure~\ref{fig:kshot_binary_bi_Gru}, qui se concentre plus précisément sur le modèle \textit{BiGRU avec mécanisme d’attention de Bahdanau et embeddings GloVe}. On y observe la diminution progressive de la perte, accompagnée d’une amélioration constante du F1-score et de la Balanced Accuracy sur l’ensemble de test, en fonction de $k$. Cela illustre non seulement la stabilité de ce modèle, mais aussi sa robustesse dans des contextes à faibles ressources.
+
+Ces résultats soulignent que dans des scénarios à faibles ressources, seuls certains modèles — notamment ceux dotés d’architectures avancées et de représentations lexicales spécialisées — parviennent à \textit{généraliser efficacement}. Le modèle \textit{BiGRU avec attention}, lorsqu’il est associé à GloVe, s’impose comme un candidat robuste pour la classification binaire biomédicale, même dans des conditions où les données étiquetées sont rares.
+
+\subsection{Résultats expérimentaux de la classification multiclasses}
+
+\subsubsection{Performances des modèles LSTM, GRU, CNN+LSTM et CNN+GRU avec embeddings appris depuis zéro}
+
+Les performances des modèles CNN+LSTM, CNN+GRU, LSTM et GRU, entraînés avec des embeddings appris depuis zéro, sont présentées dans le tableau~\ref{tab:performances_multiclass} et sur ~\ref{fig:auc_multi}. Les hyperparamètres optimaux retenus pour chaque modèle sont détaillés dans le tableau~\ref{tab:hyperparams_multiclass}.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Modèle}             & \textbf{Type d'Embedding}             & \textbf{Exactitude} & \textbf{F1 Score} & \textbf{Exactitude équilibrée} & \textbf{Précision} & \textbf{Rappel} & \textbf{Temps d'entraînement (min)} & \textbf{Temps d'inférence (s)} \\ \hline
+CNN+LSTM           & Learned (from scratch, Raw Text, 250d)    & \textbf{88.13\%}           & \textbf{88.36\%}           & 88.40\%              & \textbf{89.34\%}            & \textbf{88.13\%}         & 22.85                    & 0.04                         \\ \hline
+CNN+GRU            & Learned (from scratch, Raw Text, 250d)    & 86.77\%           & 87.11\%           & 87.09\%              & 88.35\%            & 86.77\%         & 13.38                    & \textbf{0.02}                         \\ \hline
+LSTM               & Learned (from scratch, Raw Text, 250d)    & \textbf{88.13\%}           & \textbf{88.36\%}           & \textbf{88.46\%}              & 88.88\%            & \textbf{88.13\%}         & \textbf{9.03}                     & 0.07                         \\ \hline
+GRU                & Learned (from scratch, Raw Text, 250d)    & 87.74\%           & 87.78\%           & 88.00\%              & 88.00\%            & 87.74\%         & 9.09                     & 0.03                         \\ \hline
+\end{tabular}
+}
+\caption{Performances des modèles avec embeddings appris depuis zéro sur l’ensemble de test en classification multiclasses.}
+\label{tab:performances_multiclass}
+\end{table}
+
+Ces résultats montrent que les modèles CNN+LSTM et LSTM obtiennent les meilleures performances en termes d’exactitude et de F-1 score, proches de 88\%. Le modèle GRU, bien que légèrement moins performant, reste compétitif, notamment grâce à des temps d’entraînement et d’inférence plus courts. Le modèle CNN+GRU est quant à lui le plus rapide à l’inférence, au prix d’une légère baisse de performance.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{no_embed_Multi_tsne_gru.png}
+\caption{Projection t-SNE des représentations textuelles avant entraînement (à gauche, embeddings non ajustés) et après entraînement (à droite, avec le modèle GRU) en classification multiclasses.}
+\label{fig:no_embed_Multi_tsne_gru}
+\end{figure}
+
+La figure~\ref{fig:gru_multi_tsne} présente la projection t-SNE des représentations textuelles avant entraînement (à gauche, embeddings non ajustés) et après entraînement (à droite, avec le modèle GRU) en classification multiclasses utilisant les embeddings GloVe (300d). Avant entraînement, les représentations initiales apparaissent peu structurées, avec un mélange important des différentes classes. Après entraînement, les états cachés du GRU se regroupent en clusters plus nets, traduisant une meilleure séparation des classes malgré quelques chevauchements résiduels. Les performances des modèles LSTM, GRU, CNN+LSTM et CNN+GRU exploitant ces embeddings pré-entraînés sont détaillées dans le tableau~\ref{tab:performances_pretrained}, où les meilleures valeurs sont mises en évidence en gras. Ces résultats sont également illustrés sous forme d’histogrammes dans la figure~\ref{fig:multi_class_performance}.
+
+Ces observations confirment que, même en partant d’embeddings appris depuis zéro, les modèles étudiés sont capables d’apprendre des représentations discriminantes adaptées à la classification multiclasses. Toutefois, l’intégration d’embeddings pré-entraînés pourrait encore améliorer la qualité de la séparation des classes.
+
+Bien que ces résultats soient encourageants, il convient de noter que les modèles entraînés exclusivement avec des embeddings appris depuis zéro ne bénéficient pas des connaissances linguistiques préalables présentes dans des embeddings pré-entraînés tels que GloVe ou FastText. Ces derniers intègrent une richesse sémantique issue de larges corpus textuels, conférant ainsi une meilleure capacité initiale à distinguer les classes. Dans cette optique, la prochaine section explore les performances des modèles lorsque des embeddings pré-entraînés sont utilisés, afin d’évaluer leur impact sur la classification multiclasses.
+
+\subsubsection{Performances des modèles LSTM, GRU, CNN+LSTM et CNN+GRU avec word embeddings : GloVe et FastText}
+
+Les performances des modèles CNN+LSTM, CNN+GRU, LSTM et GRU utilisant des embeddings pré-entraînés GloVe et FastText (300 dimensions) sont présentées dans le tableau~\ref{tab:performances_pretrained}. Les configurations d’hyperparamètres optimales sont celles détaillées dans la section précédente (cf. tableau~\ref{tab:hyperparams_multiclass}).
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Modèle}             & \textbf{Type d'Embedding} & \textbf{Exactitude} & \textbf{F1 Score} & \textbf{Exactitude équilibrée} & \textbf{Précision} & \textbf{Rappel} & \textbf{Temps d'entraînement (min)} & \textbf{Temps d'inférence (s)} \\ \hline
+CNN+LSTM           & FastText (300d)           & \textbf{90.50\%}           & \textbf{90.49\%}           & \textbf{90.73\%}              & \textbf{90.58\%}            & \textbf{90.50\%}         & \textbf{5.12}                     & 0.06                         \\ \hline
+CNN+GRU            & FastText (300d)           & 88.91\%           & 88.96\%           & 89.15\%              & 89.15\%            & 88.91\%         & 8.25                     & 0.03                         \\ \hline
+LSTM               & FastText (300d)           & 80.49\%           & 80.65\%           & 81.67\%              & 89.21\%            & 80.49\%         & $\sim$11.0               & 0.09                         \\ \hline
+GRU                & FastText (300d)           & 92.26\%           & 92.26\%           & 92.46\%              & 92.31\%            & 92.26\%         & 2.67                     & \textbf{0.06}                         \\ \hline
+CNN+LSTM           & GloVe (300d)              & 87.19\%           & 87.60\%           & 87.43\%              & 89.16\%            & 87.19\%         & 19.28                    & 0.06                         \\ \hline
+CNN+GRU            & GloVe (300d)              & 87.62\%           & 87.72\%           & 87.89\%              & 88.33\%            & 87.62\%         & 12.74                    & 0.03                         \\ \hline
+LSTM               & GloVe (300d)              & 89.17\%           & 89.25\%           & 89.51\%              & 89.51\%            & 89.17\%         & 41.73                    & 0.05                         \\ \hline
+\end{tabular}
+}
+\caption{Performances des modèles avec embeddings pré-entraînés GloVe et FastText sur l’ensemble de test en classification multiclasses.}
+\label{tab:performances_pretrained}
+\end{table}
+
+La figure~\ref{fig:gru_multi_tsne} illustre la projection t-SNE des représentations textuelles avant et après entraînement du modèle GRU utilisant des embeddings GloVe (300d). Avant entraînement, les embeddings initiaux apparaissent peu structurés, sans séparation nette entre les classes. En revanche, après entraînement, les états cachés du GRU s’organisent en clusters bien distincts, ce qui traduit l’acquisition de représentations internes discriminantes, efficaces pour la classification multiclasses.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{gru_multi_tsne.png}
+\caption{Projection t-SNE des représentations textuelles avant entraînement (à gauche, embeddings non ajustés) et après entraînement (à droite, avec le modèle GRU) en classification multiclasses utilisant GloVe (300d).}
+\label{fig:gru_multi_tsne}
+\end{figure}
+
+Les résultats montrent que le modèle GRU associé aux embeddings FastText atteint les meilleures performances en termes d’exactitude (92.26\%), de F1-score et d’exactitude équilibrée, surpassant ainsi les autres architectures. Le CNN+LSTM avec FastText affiche également d’excellentes métriques, se positionnant juste derrière le GRU tout en bénéficiant d’un temps d’entraînement très réduit (5.12 minutes), ce qui représente un compromis intéressant entre précision et coût computationnel. On peut également voir ces résultats sous forme d'histogrammes via la figure~\ref{fig:multi_class_performance} et sur et sur ~\ref{fig:auc_multi}.
+
+Les modèles utilisant GloVe présentent globalement des performances légèrement inférieures à celles obtenues avec FastText, avec notamment un temps d’entraînement plus élevé, en particulier pour le LSTM (près de 42 minutes). En termes de temps d’inférence, le CNN+GRU et le GRU sont les plus rapides, affichant des durées inférieures à 0.06 seconde, ce qui peut être un critère déterminant dans des contextes où la rapidité de prédiction est cruciale.
+
+Il est également intéressant de noter que, comparés aux modèles entraînés \textit{from scratch}, ceux utilisant des word embeddings pré-entraînés (GloVe ou FastText) bénéficient d’une meilleure convergence et d’une généralisation plus stable, tout en réduisant la nécessité d’un entraînement long sur des jeux de données spécifiques.Cette approche permet aux modèles de s’appuyer sur des représentations linguistiques déjà riches, ce qui améliore notablement leurs performances sur des tâches complexes comme la classification multiclasses. Ces résultats motivent l’exploration de méthodes encore plus sophistiquées, en particulier les modèles basés sur des embeddings contextuels tels que ceux issus de PubMedBERT et BioBERT.
+
+\subsubsection{Performances des modèles GRU bidirectionnels avec l'attention de Bahdanau, les embeddings contextuels (PubMedBERT et BioBERT) et les word embeddings (GloVe et FastText)}
+
+Les résultats précédents ont montré l’intérêt des embeddings pré-entraînés statiques, tels que FastText et GloVe, pour améliorer les performances des modèles séquentiels classiques. Pour aller plus loin, cette section évalue l’impact des représentations contextuelles issues de modèles de langage de type BERT, spécifiquement adaptés au domaine biomédical, à savoir PubMedBERT et BioBERT. Ces représentations contextuelles sont intégrées dans une architecture BiGRU enrichie d’une couche d’attention de type Bahdanau, permettant de mieux capter les relations contextuelles dans les séquences textuelles.
+
+Les hyperparamètres retenus pour ces modèles correspondent à ceux optimisés lors de la phase de réglage détaillée précédemment (cf. tableau~\ref{tab:hyperparams_multiclass}).
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Modèle}             & \textbf{Type d'Embedding} & \textbf{Exactitude} & \textbf{F1 Score} & \textbf{Exactitude équilibrée} & \textbf{Précision} & \textbf{Rappel} & \textbf{Temps d'entraînement (min)} & \textbf{Temps d'inférence (s)} \\ \hline
+\textbf{BiGRU + Bahdanau}   & GloVe (300d)              & 92.17\%           & 92.21\%           & 92.35\%              & 92.40\%            & 92.17\%         & 10.56                    & 0.21                         \\ \hline
+\textbf{BiGRU + Bahdanau}   & FastText (300d)           & 92.80\%           & 92.89\%           & 93.04\%              & 93.14\%            & 92.80\%         & 9.96                     & 0.22                         \\ \hline
+\textbf{BiGRU + Bahdanau}   & PubMedBERT                & 91.89\%           & 91.90\%           & 92.16\%              & 91.96\%            & 91.89\%         & 33.33                    & 0.50                         \\ \hline
+\textbf{BiGRU + Bahdanau}   & BioBERT                   & \textbf{92.23\%}  & \textbf{92.33\%}  & \textbf{92.01\%}     & \textbf{92.13\%}    & \textbf{92.21\%} & 35.66                    & 0.49                         \\ \hline
+\end{tabular}
+}
+\caption{Performances des modèles BiGRU avec attention et différents types d'embeddings (statiques et contextuels) sur l’ensemble de test.}
+\label{tab:performances_contextual}
+\end{table}
+
+La figure~\ref{fig:gru_multi_tsne} illustre la projection t-SNE des représentations extraites du modèle \textit{BiGRU + BioBERT} avant et après entraînement. Avant entraînement, les vecteurs issus de l’encodeur BERT gelé présentent une structure peu discriminante, avec un mélange important des classes. Après entraînement, les représentations apprises montrent une séparation nettement plus marquée entre les différentes classes, traduisant une meilleure adaptation du modèle à la tâche de classification multiclasses, et surpassant la séparation observée avec les embeddings statiques tels que GloVe.
+
+Les résultats reportés dans le tableau~\ref{tab:performances_contextual} et sur ~\ref{fig:auc_multi} confirment les bénéfices des embeddings contextuels, en particulier avec BioBERT. Le modèle \textit{BiGRU + BioBERT}, dont l’encodeur est fine-tuné conjointement avec le reste du réseau, obtient les meilleures performances globales, notamment en F1-score (92.33\%) et précision (92.13\%). Toutefois, ce gain de performance s’accompagne d’un coût computationnel significatif, avec un temps d’entraînement dépassant 35 minutes et un temps d’inférence proche de 0.5 seconde par échantillon.
+
+En comparaison, le modèle \textit{BiGRU + PubMedBERT}, qui utilise un encodeur BERT gelé — c’est-à-dire sans mise à jour des poids durant l’entraînement — affiche un nombre nettement plus faible de paramètres entraînables (\textbf{1,708,033} contre \textbf{110,018,305} pour BioBERT). Ce choix limite la capacité du modèle à s’adapter finement à la tâche, ce qui se traduit par des performances légèrement inférieures, mais avec un coût en temps et en ressources plus modéré.
+
+Pour une meilleure visualisation et comparaison des différentes métriques d’évaluation (exactitude équilibrée, F1-score, précision et rappel), la figure~\ref{fig:multi_class_performance} présente un résumé sous forme d’histogrammes des performances obtenues par chacun des modèles testés.
+
+En synthèse, les modèles basés sur BioBERT offrent un compromis optimal entre précision et expressivité, au prix d’une complexité et d’un temps d’entraînement plus élevés. Les variantes utilisant PubMedBERT proposent une alternative plus légère, convenant mieux aux contraintes computationnelles, mais avec un léger compromis sur la qualité prédictive. Les modèles reposant sur les embeddings statiques restent néanmoins compétitifs, particulièrement lorsqu’un compromis entre performance et rapidité est recherché.
+
+\subsection{Étude de l’impact du déséquilibre des classes : rééchantillonnage et pondération des pertes}
+
+Dans le cadre de la classification de textes biomédicaux, les déséquilibres entre classes peuvent avoir un impact considérable sur la qualité des prédictions, notamment en réduisant la capacité des modèles à bien généraliser sur les classes minoritaires. Cette problématique est d’autant plus critique que les modèles les plus performants reposent souvent sur des architectures lourdes, telles que les encodeurs contextuels de type BERT, dont le coût computationnel limite l’applicabilité dans des environnements contraints en ressources.
+
+Dans cette optique, nous explorons ici l’efficacité de stratégies classiques de traitement du déséquilibre : le rééchantillonnage des données (via SMOTE et Borderline-SMOTE) ainsi que la pondération des classes dans la fonction de perte (weighted training). L’objectif est double : évaluer dans quelle mesure ces approches permettent d’améliorer les performances sur l’ensemble des classes, tout en analysant si elles constituent une alternative efficace et moins coûteuse à l’utilisation de modèles massivement pré-entraînés.
+
+Pour cela, nous avons comparé les performances du modèle \textit{BiGRU} avec attention de Bahdanau, en combinaison avec différents types d’embeddings (GloVe, FastText, PubMedBERT et BioBERT), selon quatre stratégies d’apprentissage différentes : sans rééquilibrage, avec SMOTE, avec Borderline-SMOTE, et avec pondération des classes dans la fonction de perte. Le tableau \ref{tab:performance_multiclass} présente la synthèse des résultats obtenus, en termes d’exactitude, d’exactitude équilibrée, de F1-score, de précision et de rappel, pour chaque combinaison testée.
+
+\begin{table}[H]
+    \centering
+    \scriptsize
+    \caption{Performance comparison of models using SMOTE, Borderline-SMOTE, and Weighted Training (Multi-Class Classification)}
+    \label{tab:performance_multiclass}
+    \begin{tabular}{|l|l|l|c|c|c|c|c|}
+    \hline
+    \textbf{Training Strategy} & \textbf{Model} & \textbf{Embedding} & \textbf{Accuracy} & \textbf{Balanced Acc} & \textbf{F1-score} & \textbf{Precision} & \textbf{Recall} \\
+    \hline
+    No resampling & BiGRU+Bahdanau & GloVe (300d)     & 92.17\% & 92.35\% & 92.21\% & 92.40\% & 92.17\% \\
+    No resampling & BiGRU+Bahdanau & FastText (300d)  & \textbf{92.80\%} & 93.04\% & \textbf{92.89\%} & \textbf{93.14\%} & \textbf{92.80\%} \\
+    No resampling & BiGRU+Bahdanau & PubMedBERT       & 91.89\% & 92.16\% & 91.90\% & 91.96\% & 91.89\% \\
+    \hline
+    SMOTE         & BiGRU+Bahdanau & GloVe (300d)     & 90.60\% & 90.88\% & 90.58\% & 90.58\% & 90.60\% \\
+    SMOTE         & BiGRU+Bahdanau & FastText (300d)  & 91.45\% & 91.71\% & 91.49\% & 91.59\% & 91.45\% \\
+    SMOTE         & BiGRU+Bahdanau & PubMedBERT       & 92.38\% & 92.56\% & 92.36\% & 92.48\% & 92.38\% \\
+    SMOTE         & BiGRU+Bahdanau & BioBERT          & 92.00\% & 92.00\% & 92.00\% & \textbf{93.00\%} & 92.00\% \\
+    \hline
+    Borderline-SMOTE & BiGRU+Bahdanau & GloVe (300d)   & 90.84\% & 91.09\% & 90.84\% & 90.86\% & 90.84\% \\
+    Borderline-SMOTE & BiGRU+Bahdanau & FastText (300d)& 91.89\% & 92.16\% & 91.90\% & 91.96\% & 91.89\% \\
+    Borderline-SMOTE & BiGRU+Bahdanau & PubMedBERT    & 92.07\% & 92.18\% & 92.02\% & 92.19\% & 92.07\% \\
+    Borderline-SMOTE & BiGRU+Bahdanau & BioBERT       & 92.00\% & 92.00\% & 92.00\% & \textbf{93.00\%} & 92.00\% \\
+    \hline
+    Weighted Training & BiGRU+Bahdanau & GloVe (300d)  & 90.29\% & 90.54\% & 90.35\% & 90.51\% & 90.29\% \\
+    Weighted Training & BiGRU+Bahdanau & FastText (300d)& 92.17\% & 92.43\% & 92.19\% & 92.32\% & 92.17\% \\
+    Weighted Training & BiGRU+Bahdanau & PubMedBERT    & 92.33\% & \textbf{92.57\%} & 92.31\% & 92.32\% & 92.33\% \\
+    Weighted Training & BiGRU+Bahdanau & BioBERT       & 92.00\% & \textbf{93.00\%} & 92.00\% & \textbf{93.00\%} & 92.00\% \\
+    \hline
+    \end{tabular}
+\end{table}
+
+L’analyse comparative met en évidence plusieurs tendances significatives. Tout d’abord, les résultats obtenus sans aucune méthode de rééquilibrage restent très compétitifs, en particulier avec les embeddings statiques. Le modèle \textit{BiGRU + FastText} se démarque avec une F1-score de 92,89\% et une précision de 93,14\%, constituant ainsi la meilleure configuration de base sans recours à des stratégies d’équilibrage.
+
+L'application de la méthode SMOTE montre des effets contrastés. Si elle améliore légèrement les performances des modèles utilisant des embeddings contextuels, comme PubMedBERT (F1-score de 92,36\% contre 91,90\% sans rééchantillonnage), elle tend en revanche à dégrader celles obtenues avec des embeddings statiques. Par exemple, le modèle \textit{BiGRU + GloVe} voit sa F1-score chuter de 92,21\% à 90,58\%. Cela suggère que SMOTE, reposant sur une interpolation linéaire dans l’espace des caractéristiques, est moins adapté aux représentations fortement corrélées ou denses comme celles générées par GloVe ou FastText.
+
+Cette hypothèse est corroborée par les visualisations t-SNE présentées précédemment. Celles-ci révèlent que les représentations statiques, notamment avec GloVe, génèrent des regroupements compacts avec des frontières de classes parfois floues, rendant l’injection d’exemples synthétiques potentiellement perturbatrice. À l’inverse, les embeddings contextuels comme ceux de PubMedBERT offrent une structuration plus diffuse de l’espace sémantique, avec des séparations de classes plus marquées. Dans ce cas, SMOTE et Borderline-SMOTE peuvent produire des exemples synthétiques plus cohérents et utiles au modèle, en particulier lorsqu’ils sont concentrés sur les zones de frontière.
+
+Borderline-SMOTE, plus prudent dans la génération de données en se focalisant sur les régions proches des décisions limites, s'avère ainsi légèrement plus efficace que SMOTE classique, notamment en association avec FastText ou PubMedBERT. Toutefois, les gains restent marginaux et ne dépassent pas les meilleures performances obtenues sans rééchantillonnage.
+
+À l’inverse, la pondération des classes dans la fonction de perte (weighted training) se distingue par sa robustesse et sa cohérence. Cette approche permet non seulement de maintenir les performances des modèles plus légers, mais également d’optimiser celles des modèles à base d’encodeurs contextuels. Le modèle \textit{BiGRU + PubMedBERT} atteint ainsi une balanced accuracy de 92,57\% (la plus élevée pour ce modèle) et une F1-score de 92,31\%. De même, la configuration \textit{BiGRU + BioBERT}, avec pondération, atteint une précision remarquable de 93,00\% tout en conservant une performance globale stable.
+
+Ces résultats indiquent que la pondération des classes constitue une solution simple, stable et efficace pour améliorer la détection des classes minoritaires, sans recourir à la génération artificielle de données. Elle n’implique aucun coût additionnel notable en termes de temps d’entraînement ou de complexité architecturale, ce qui la rend particulièrement adaptée aux environnements contraints.
+
+En conclusion, si les méthodes de rééchantillonnage peuvent présenter un intérêt dans certains cas spécifiques — notamment avec des embeddings contextuels bien structurés — elles n’égalent pas, dans notre cadre expérimental, les performances offertes par les stratégies de pondération. Ces dernières s’imposent comme un compromis optimal entre efficacité, stabilité et sobriété computationnelle, en particulier lorsqu’elles sont appliquées à des modèles contextuels comme PubMedBERT ou BioBERT.
+
+\subsection{Apprentissage par petites touches (Few-Shot Learning)}
+
+Tout comme cela a été réalisé dans le cas de la classification \textit{binaire}, nous explorons ici les performances des modèles dans un contexte de \textit{few-shot learning} appliqué à la classification \textit{multi-classes}. L'objectif est d'évaluer la capacité des différentes architectures à généraliser à partir d’un nombre très restreint d’exemples par classe (\textit{k-shot}), un scénario courant dans le domaine biomédical où les données annotées sont souvent rares ou déséquilibrées.
+
+La Figure~\ref{fig:kshot_multi} présente une vue d’ensemble des performances comparées de plusieurs modèles selon cinq métriques : F1-score, balanced accuracy, recall, precision et accuracy. Chaque ligne du graphique représente un modèle différent, et chaque colonne correspond à une métrique d’évaluation. L’analyse de ces résultats permet de dégager plusieurs tendances marquantes.
+
+Tout d’abord, les modèles \textit{GRU+FastText} et \textit{CNN+LSTM} montrent des performances globalement faibles et peu évolutives. Leurs métriques restent proches des valeurs aléatoires, même lorsque le nombre d’exemples $k$ augmente, ce qui traduit une incapacité manifeste à généraliser dans un contexte de few-shot learning. Le modèle \textit{GRU+GloVe} montre quant à lui une légère amélioration avec l’augmentation de $k$, mais reste très instable et globalement peu performant.
+
+À l’inverse, le modèle \textit{GRU-BaselineFastText} se distingue par une progression plus régulière et cohérente des performances avec l’augmentation de $k$, en particulier en \textit{F1-score} et en \textit{recall}. Bien que les valeurs absolues restent modérées, cette tendance indique une meilleure capacité à exploiter les faibles volumes de données par rapport aux modèles précédents.
+
+C’est toutefois le modèle \textit{GRU-BaselineGloVe} qui s’impose comme le plus performant dans ce scénario. Il affiche une amélioration nette et constante sur l’ensemble des métriques à mesure que $k$ augmente. Pour les plus grandes valeurs de $k$, il atteint un \textit{F1-score} avoisinant les 0.8, ainsi qu’une \textit{balanced accuracy} élevée et stable, témoignant d’une excellente capacité de généralisation dans des conditions de données limitées.
+
+La figure~\ref{fig:kshot_multi_bi_Gru} illustre plus précisément l’évolution des performances du modèle \textit{BiGRU avec attention de Bahdanau} et embeddings GloVe dans le cadre du few-shot learning multi-classes. On y observe une diminution régulière de la fonction de perte, accompagnée d'une amélioration progressive et cohérente du \textit{F1-score} et de la \textit{balanced accuracy} sur l’ensemble de test à mesure que $k$ augmente. Ces résultats confirment la robustesse et la capacité de ce modèle à apprendre efficacement, même avec un nombre limité d’exemples par classe.
+
+En définitive, ces résultats soulignent combien le choix combiné de l’architecture du modèle et des représentations lexicales est déterminant en contexte de few-shot learning multiclasses. Lorsque les données sont limitées, les modèles simples ou inadaptés montrent des difficultés à généraliser efficacement. À l’inverse, des configurations plus avancées — telles que \textit{BiGRU + Bahdanau + GloVe} — parviennent à maintenir des performances solides malgré la rareté des exemples. Cela confirme l’intérêt d’associer des embeddings spécialisés pré-entraînés à une architecture récurrente renforcée par un mécanisme d’attention, une approche qui s’avère particulièrement bien adaptée aux scénarios à faibles ressources et à forte complexité catégorielle.
+
+\section{Critical Analysis and Discussion}
+
+\subsection{Analyse approfondie des performances en classification binaire}
+
+Les matrices de confusion présentées dans la figure~\ref{fig:cm_binary} fournissent un aperçu quantitatif essentiel des capacités discriminatives des architectures testées, notamment les réseaux GRU et LSTM, en tâche binaire. On observe une nette supériorité des modèles intégrant des embeddings pré-entraînés comme GloVe ou FastText par rapport à des embeddings appris de zéro ou des représentations one-hot classiques.
+
+Cette amélioration se traduit principalement par une augmentation significative du rappel (sensibilité) — indicateur critique en milieu médical, où le coût d’une erreur de type II (faux négatif) est souvent bien plus élevé que celui d’une erreur de type I. En effet, un faible taux de faux négatifs garantit que les cas pathologiques sont détectés, limitant ainsi les omissions potentiellement graves.
+
+Le modèle \textit{LSTM + FastText}, qui combine une architecture séquentielle à longue mémoire avec des représentations lexicales robustes, semble atteindre un compromis optimal entre rappel et précision (voir la légende de la figure~\ref{fig:cm_binary}). Ce résultat est corroboré par les courbes d’apprentissage stables observées, témoignant d’une bonne capacité à généraliser, notamment au travers d’une faible variance inter-folds lors de la validation croisée.
+
+L’analyse qualitative des erreurs, illustrée par la figure~\ref{fig:binary_misclass}, met en lumière des cas ambigus où les énoncés ne contiennent que peu d’informations discriminantes ou sont partiellement contradictoires. Ces observations révèlent les limites inhérentes à des embeddings statiques dans la capture des nuances contextuelles et syntaxiques fines, suggérant qu’une modélisation plus dynamique ou contextuelle pourrait mieux appréhender ces subtilités.
+
+Par ailleurs, la faible complexité computationnelle des modèles testés dans ce cadre binaire, notamment en termes de temps d’entraînement et d’inférence, confère à ces approches un avantage pratique non négligeable pour un déploiement rapide en production, notamment dans des environnements contraints (applications mobiles, dispositifs médicaux embarqués).
+
+\subsection{Complexités et enjeux en classification multiclasses}
+
+L’extension à la classification multiclasses induit une complexification notable de la tâche, comme visible dans la figure~\ref{fig:cm_multi}. La distribution des erreurs se complexifie, avec une augmentation du nombre de confusions inter-classes, particulièrement entre catégories sémantiquement proches.
+
+Les modèles à embeddings contextuels, en particulier ceux fondés sur des architectures Transformer pré-entraînées sur des corpus biomédicaux spécialisés (BioBERT, PubMedBERT), associés à des mécanismes d’attention comme Bahdanau, s’imposent comme les meilleures solutions. Ces modèles exploitent la richesse sémantique et contextuelle des phrases, offrant des vecteurs dynamiques qui adaptent la représentation lexicale en fonction de l’environnement syntaxique et pragmatique.
+
+La figure~\ref{fig:multi_misclassifications} illustre les confusions spécifiques entre classes, mettant en exergue que les erreurs proviennent majoritairement d’ambiguïtés lexicales ou de chevauchements sémantiques. Ces résultats confirment les limites des embeddings statiques, incapables de moduler finement leur représentation selon le contexte d’apparition des termes.
+
+Les courbes AUC présentées dans la figure~\ref{fig:auc_multi} renforcent ce constat : les modèles contextuels dépassent régulièrement le seuil de 0.95, signe d’une excellente capacité à distinguer les classes même dans des contextes complexes. En comparaison, les modèles GloVe et FastText plafonnent autour de 0.85–0.90, ce qui, bien que correct, indique une marge d’amélioration non négligeable.
+
+Cependant, cette meilleure performance s’accompagne d’un coût computationnel important. Les temps d’entraînement, multipliés par un facteur 3 à 5 selon la configuration matérielle, rendent ces modèles moins adaptés aux contraintes temps réel ou aux systèmes à ressources limitées. L’inférence plus lente limite également leur emploi dans des applications embarquées ou nécessitant des réponses instantanées.
+
+\subsection{Capacité de généralisation et pertinence du few-shot learning}
+
+L’évaluation des capacités de généralisation en contexte de faible disponibilité de données annotées révèle des dynamiques distinctes entre la classification binaire et multiclasses, influencées par la complexité intrinsèque du problème et la diversité des classes.
+
+\paragraph{Cas binaire}
+
+Dans le cadre de la classification binaire, le modèle \textit{BiGRU + Bahdanau + GloVe}, illustré en figure~\ref{fig:kshot_multi_bi_Gru}, montre une capacité remarquable à extraire rapidement des caractéristiques discriminantes avec peu d’exemples, atteignant un plateau de performance dès \( k \approx 20-30 \) exemples par classe. Cette efficacité s’explique par la nature dichotomique du problème où la frontière décisionnelle est globalement plus simple à modéliser, réduisant la dimension effective de l’espace des représentations latentes. Le mécanisme d’attention Bahdanau facilite ici une focalisation optimale sur les séquences caractéristiques, permettant d’augmenter la pertinence des vecteurs d’entrée même en cas de faible volume d’apprentissage.
+
+Cette propriété est particulièrement cruciale dans des domaines sensibles comme la santé, où les cas positifs sont souvent rares et coûteux à annoter. Elle suggère que, sous ces conditions, des architectures récurrentes couplées à une attention peuvent combler en partie la limitation de données, réduisant la nécessité de vastes corpus.
+
+\paragraph{Cas multiclasses}
+
+La classification multiclasses, par contraste, présente une courbe d’apprentissage plus progressive et une amélioration continue jusqu’à \( k=30 \) exemples par classe, avec un plateau moins prononcé et des performances globalement plus faibles pour faibles échantillons. Cela s’explique par la complexité accrue liée à la multiplication des catégories, souvent sémantiquement proches, qui requiert une capacité plus fine à discriminer des motifs lexicaux et contextuels subtils.
+
+L’espace latent est plus vaste et fragmenté, ce qui augmente la difficulté d’extraction de représentations cohérentes à partir d’un petit nombre d’exemples. Le mécanisme d’attention, bien que bénéfique, est mis à rude épreuve pour hiérarchiser les informations pertinentes dans une multitude de classes, accentuant la nécessité d’une architecture robuste et d’un enrichissement des embeddings via des modèles pré-entraînés contextualisés (BioBERT, PubMedBERT).
+
+Cette dynamique met en évidence la limite du few-shot learning pur dans les scénarios multiclasses complexes, et justifie souvent la complémentarité avec des stratégies de transfert learning ou d’augmentation des données.
+
+\subsection{Limites des techniques de sur-échantillonnage et impacts computationnels}
+
+L’application de méthodes de rééquilibrage des classes comme SMOTE révèle des effets différenciés selon la nature binaire ou multiclasses du problème, avec des implications cruciales sur la structuration des espaces latents et la charge computationnelle.
+
+\paragraph{Cas binaire}
+
+En classification binaire, les résultats exposés dans la table~\ref{tab:performance_resampling} montrent que l’ajout de points synthétiques via SMOTE peut perturber les espaces latents déjà bien organisés par les architectures GRU/LSTM et les embeddings statiques. Les projections t-SNE illustrent que les clusters des deux classes sont clairement délimités ; l’introduction artificielle de données peut alors brouiller ces frontières, entraînant une dégradation des performances, notamment en termes de précision et rappel.
+
+De plus, le sur-échantillonnage induit un surcoût computationnel non négligeable lors de la phase d’entraînement, sans gain compensatoire visible. En comparaison, la pondération des classes dans la fonction de perte offre une solution plus élégante et légère, modulant l’importance des erreurs liées aux classes minoritaires sans altérer la distribution des données réelles. Cette méthode est particulièrement adaptée à des scénarios binaires où la séparation entre les classes est souvent plus nette.
+
+\paragraph{Cas multiclasses}
+
+Dans le cadre multiclasses, les effets du sur-échantillonnage via SMOTE sont amplifiés. La multiplication des classes minoritaires et la proximité sémantique renforcent la probabilité que les données synthétiques introduisent du bruit, fragilisant les frontières de décision et complexifiant la tâche de classification. Les espaces latents deviennent plus hétérogènes et moins interprétables, ce qui peut provoquer des confusions inter-classes accrues, notamment entre catégories proches.
+
+Le coût computationnel est également plus élevé, non seulement du fait du volume accru de données artificielles, mais aussi en raison de la complexité des modèles contextuels (transformers) souvent nécessaires pour ces tâches. Ces derniers sont par ailleurs sensibles aux perturbations dans la qualité des données d’entraînement, ce qui aggrave encore les effets délétères.
+
+Par conséquent, les alternatives comme la pondération des classes ou l’adoption de mécanismes d’attention adaptés s’avèrent plus robustes et plus efficientes, en maintenant une meilleure stabilité des représentations et en limitant la surcharge calculatoire.
+
+\subsection{Synthèse comparative et recommandations pratiques}
+
+L’analyse comparative entre les contextes binaire et multiclasses met en lumière des choix architecturaux et méthodologiques à adapter selon la complexité du problème, la disponibilité des ressources et les contraintes d’application.
+
+\paragraph{Cas binaire}
+
+\begin{itemize}
+    \item \textbf{Modèles adaptés :} Les architectures récurrentes simples (GRU/LSTM) avec embeddings statiques comme GloVe ou FastText sont largement suffisantes pour atteindre des performances élevées, tout en garantissant une faible latence et un coût matériel modéré.
+    \item \textbf{Équilibrage des classes :} La pondération dans la fonction de perte est privilégiée, évitant les distorsions dans les espaces latents et limitant la complexité.
+    \item \textbf{Déploiement :} Ces modèles légers sont particulièrement adaptés aux systèmes embarqués et aux applications nécessitant un temps réel strict, notamment en médecine où la rapidité et la fiabilité priment.
+\end{itemize}
+
+\paragraph{Cas multiclasses}
+
+\begin{itemize}
+    \item \textbf{Modèles adaptés :} Les modèles à base de transformers spécialisés (BioBERT, PubMedBERT) couplés à des mécanismes d’attention (Bahdanau) sont requis pour capter la richesse contextuelle et gérer la complexité sémantique des multiples classes.
+    \item \textbf{Équilibrage des classes :} La pondération reste également la méthode recommandée, mais peut être combinée à des stratégies d’augmentation plus sophistiquées et à des techniques de transfert learning pour compenser la rareté des données.
+    \item \textbf{Déploiement :} La lourdeur computationnelle et les temps d’inférence prolongés imposent une réflexion sur le contexte d’utilisation, favorisant les environnements disposant de ressources importantes et où la précision critique justifie l’investissement.
+\end{itemize}
+
+Ainsi, le choix entre modèles légers et lourds, entre stratégies d’équilibrage classiques ou avancées, doit être guidé par une analyse fine des exigences métier, des contraintes techniques et des caractéristiques propres au problème (binaire vs multiclasses). La compréhension approfondie des dynamiques de généralisation et des impacts des techniques d’augmentation est indispensable pour optimiser la conception des systèmes de classification dans les domaines à haute valeur ajoutée comme la santé ou le droit.
+
+\chapter{Conclusion and Future Directions}
+
+\section{Summary of Contributions}
+
+Cette thèse a exploré en profondeur la classification automatique de textes biomédicaux à partir de résumés extraits de PubMed, en se focalisant sur des tâches à la fois binaires (paludisme vs non-paludisme) et multiclasses (9 catégories de maladies). 
+
+Nous avons comparé plusieurs architectures d’apprentissage profond, notamment les \gls{lstm}, \gls{gru} et \gls{gru} bidirectionnels avec attention de Bahdanau, afin de capturer les dépendances séquentielles et le contexte linguistique complexe des textes biomédicaux. 
+
+L’étude a mis en évidence l’intérêt des représentations lexicales, des embeddings appris de zéro aux embeddings statiques préentraînés (\gls{glove}, \gls{fasttext}) jusqu’aux embeddings contextuels issus de modèles transformeurs spécialisés (\gls{biobert}, \gls{pubmedbert}). Ces derniers ont montré des gains substantiels en précision, confirmant l’importance d’une connaissance préalable fine et spécifique au domaine biomédical.
+
+La gestion du déséquilibre des classes, prégnante dans les données biomédicales, a été abordée par différentes méthodes, avec une préférence pour les fonctions de perte pondérées qui se sont révélées plus stables et efficaces que les techniques de sur-échantillonnage comme SMOTE.
+
+Enfin, l’application de méthodes d’apprentissage avec peu d’exemples (\gls{fsl}) a permis de démontrer la capacité des meilleurs modèles à généraliser sur des maladies rares, souvent sous-représentées dans les corpus, soulignant leur potentiel dans des contextes à faibles ressources.
+
+\section{Limitations and Potential Biases}
+
+Malgré ces avancées, plusieurs limites sont à considérer. La disponibilité restreinte de données annotées et équilibrées demeure un obstacle majeur, limitant la généralisation des modèles aux nouvelles catégories ou aux contextes cliniques spécifiques. 
+
+Les biais inhérents aux corpus biomédicaux, tels que la surreprésentation de certaines maladies ou l’évolution terminologique rapide, peuvent altérer la robustesse et la fiabilité des classifications. 
+
+Sur le plan technique, les modèles transformeurs contextuels, bien que performants, exigent des ressources computationnelles importantes, limitant leur déploiement en temps réel ou sur des environnements contraints. De plus, l’interprétabilité de ces modèles complexes reste un défi pour leur adoption en milieu clinique.
+
+\section{Perspectives: BioWordVec, Prompt Engineering, Clinical Applications}
+
+Plusieurs axes de recherche futurs se dessinent pour renforcer et étendre ce travail :
+
+\paragraph{Intégration de \gls{biowordvec}}  
+L’utilisation d’embeddings spécifiques tels que \gls{biowordvec}, qui sont préentraînés sur d’importants corpus biomédicaux, représente une piste prometteuse pour enrichir la représentation sémantique des textes. Ces vecteurs de mots, conçus pour capturer les relations sémantiques propres au domaine biomédical, pourraient combiner les bénéfices des embeddings statiques traditionnels et des modèles contextuels plus lourds. Cette approche offrirait un bon compromis entre performance et complexité computationnelle, notamment pour des environnements où les ressources sont limitées, tout en conservant une bonne qualité de compréhension du langage spécialisé.
+
+\paragraph{Prompt Engineering avec modèles génératifs}  
+L’émergence des grands modèles de langage génératifs, tels que GPT ou T5, ouvre la voie à une nouvelle façon d’aborder la classification de textes biomédicaux via le prompt engineering. Plutôt que de réentraîner des modèles complexes, il est possible d’adapter rapidement et efficacement ces modèles en formulant des instructions (prompts) spécifiques. Cette technique promet de réduire considérablement les besoins en données annotées et en puissance de calcul, tout en permettant des classifications flexibles et personnalisées selon les besoins cliniques ou de recherche.
+
+\paragraph{Applications cliniques collaboratives}  
+Le développement de systèmes de classification textuelle biomédicale doit s’accompagner d’une validation rigoureuse en collaboration avec les professionnels de santé. Cette démarche permettra d’évaluer la pertinence et la fiabilité des modèles dans des scénarios réels, et d’intégrer des critères essentiels tels que l’interprétabilité et la transparence. Adapter les modèles aux exigences spécifiques des pratiques cliniques, notamment en matière de prise de décision et de surveillance scientifique, favorisera leur adoption et leur impact dans le secteur médical.
+
+\paragraph{Apprentissage semi-supervisé et transfert multitâche}  
+Pour pallier la rareté des données annotées, l’exploration de méthodes d’apprentissage semi-supervisé et de transfert multitâche constitue une direction importante. En exploitant des données non annotées et en transférant les connaissances acquises entre tâches connexes, ces techniques peuvent améliorer la robustesse des modèles et leur capacité à généraliser sur des catégories de maladies rares ou émergentes, tout en limitant la dépendance à des jeux de données coûteux à produire.
+
+\paragraph{Compression et optimisation des modèles}  
+Afin de rendre les modèles accessibles dans des contextes à ressources limitées, tels que les dispositifs embarqués ou les infrastructures hospitalières aux capacités restreintes, le développement de techniques de compression, quantification et distillation est nécessaire. Ces méthodes permettent de réduire la taille des modèles et leur consommation énergétique sans sacrifier significativement la performance, facilitant ainsi leur déploiement à grande échelle.
+
+\paragraph{Éthique et biais}  
+Enfin, la détection, l’analyse et la correction des biais présents dans les données et les modèles restent une priorité. Assurer une classification équitable et fiable est essentiel, particulièrement dans le domaine biomédical où les décisions impactent directement la santé des patients. Les travaux futurs devront s’inscrire dans une démarche éthique rigoureuse, garantissant la transparence, la responsabilité et le respect des normes en vigueur, afin de renforcer la confiance dans ces systèmes automatisés.
+
+
+Ce travail ouvre ainsi la voie à des systèmes TALN biomédicaux à la fois puissants, pratiques et éthiquement responsables, capables d’accompagner efficacement les chercheurs et cliniciens dans la gestion et l’analyse de la littérature biomédicale.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1230,9 +1627,102 @@ BiGRU + Bahdanau  & BioBERT (768d) & 256 & 0.6 & RMSprop & 1e-4 & 110,018,305 \\
 \hline
 \end{tabular}
 }
-\caption{Model configurations used in training.}
+\caption{Hyperparameters used for each model in the binary classification task. Loss function: Binary Cross-Entropy. Batch size: 16.}
 \label{tab:model-config}
 \end{table}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Embedding Type} & \textbf{Embedding Dim} & \textbf{Hidden Dim} & \textbf{Dropout} & \textbf{Num Layers} & \textbf{Optimizer} & \textbf{LR} & \textbf{Params} \\ \hline
+
+CNN+LSTM       & Learned (from scratch)  & 250                    & 167                 & 0.3              & 1                   & AdamW              & 7e-4                        & 8,773,551 \\ \hline
+CNN+GRU        & Learned (from scratch)  & 250                    & 167                 & 0.5              & 1                   & Adam               & 7e-4                        & 8,580,351 \\ \hline
+LSTM           & Learned (from scratch)  & 250                    & 167                 & 0.5              & 1                   & Adam               & 9e-4                        & 8,773,551 \\ \hline
+GRU            & Learned (from scratch)  & 250                    & 167                 & 0.5              & 1                   & Adam               & 1e-4                        & 8,580,351 \\ \hline
+
+CNN+LSTM       & FastText (300d)         & 300                    & 450                 & 0.3              & 1                   & RMSprop            & 1e-3                        & 13,605,101 \\ \hline
+CNN+GRU        & FastText (300d)         & 300                    & 300                 & 0.5              & 1                   & AdamW              & 1e-3                        & 12,685,551 \\ \hline
+LSTM           & FastText (300d)         & 300                    & 450                 & 0.3              & 1                   & RMSprop            & 7e-3                        & 13,354,651 \\ \hline
+GRU            & FastText (300d)         & 300                    & 300                 & 0.5              & 1                   & Adam               & 1e-3                        & 12,685,551 \\ \hline
+
+CNN+LSTM       & GloVe (300d)            & 300                    & 250                 & 0.3              & 2                   & Adam               & 8e-4                        & 13,354,651 \\ \hline
+CNN+GRU        & GloVe (300d)            & 300                    & 250                 & 0.3              & 1                   & Adam               & 7e-4                        & 12,685,551 \\ \hline
+LSTM           & GloVe (300d)            & 300                    & 250                 & 0.3              & 1                   & Adam               & 7e-3                        & 13,354,651 \\ \hline
+GRU            & GloVe (300d)            & 300                    & 250                 & 0.3              & 1                   & Adam               & 7e-4                        & 12,685,551 \\ \hline
+
+BiGRU+Bahdanau & GloVe (300d)            & 300                    & 300                 & 0.9              & 1                   & RMSprop            & 9e-5                        & 13,265,401 \\ \hline
+BiGRU+Bahdanau & FastText (300d)         & 300                    & 350                 & 0.8              & 1                   & RMSprop            & 1e-3                        & 13,616,201 \\ \hline
+BiGRU+Bahdanau & PubMedBERT (768d)             & 768 (BERT)            & 256                 & 0.5              & 1                   & Adam               & 9e-5                        & 1,708,033 \\ \hline
+BiGRU+Bahdanau & BioBERT (768d)             & 768 (BERT)            & 256                 & 0.5              & 1                   & AdamW              & 1e-4                        & 110,018,305 \\ \hline
+
+\end{tabular}
+}
+\caption{Hyperparameters used for each model in the multi-class classification task. Loss function: CrossEntropyLoss. Batch size: 16.}
+\label{tab:hyperparams_multiclass}
+\end{table}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Model}             & \textbf{Embedding Type}   & \textbf{Accuracy} & \textbf{F1 Score} & \textbf{Balanced Acc} & \textbf{Precision} & \textbf{Recall} & \textbf{Training Time} & \textbf{Inference Time} \\ \hline
+\textbf{CNN+LSTM}           & Learned (from scratch)    & 88.13\%           & 88.36\%           & 88.40\%              & 89.34\%            & 88.13\%         & 22.85                    & 0.04                         \\ \hline
+\textbf{CNN+GRU}            & Learned (from scratch)    & 86.77\%           & 87.11\%           & 87.09\%              & 88.35\%            & 86.77\%         & 13.38                    & 0.02                         \\ \hline
+\textbf{LSTM}               & Learned (from scratch)    & 88.13\%           & 88.36\%           & 88.46\%              & 88.88\%            & 88.13\%         & 9.03                     & 0.07                         \\ \hline
+\textbf{GRU}                & Learned (from scratch)    & 87.74\%           & 87.78\%           & 88.00\%              & 88.00\%            & 87.74\%         & 9.09                     & 0.03                         \\ \hline
+\textbf{CNN+LSTM}           & FastText (300d)           & \textbf{90.50\%}           & \textbf{90.49\%}           & \textbf{90.73\%}              & \textbf{90.58\%}            & \textbf{90.50\%}         & \textbf{5.12}                     & 0.06                         \\ \hline
+\textbf{CNN+GRU}            & FastText (300d)           & 88.91\%           & 88.96\%           & 89.15\%              & 89.15\%            & 88.91\%         & 8.25                     & 0.03                         \\ \hline
+\textbf{LSTM}               & FastText (300d)           & 80.49\%           & 80.65\%           & 81.67\%              & 89.21\%            & 80.49\%         & $\sim$11.0               & 0.09                         \\ \hline
+\textbf{GRU}                & FastText (300d)           & 92.26\%           & 92.26\%           & 92.46\%              & 92.31\%            & 92.26\%         & 2.67                     & \textbf{0.06}                         \\ \hline
+\textbf{CNN+LSTM}           & GloVe (300d)              & 87.19\%           & 87.60\%           & 87.43\%              & 89.16\%            & 87.19\%         & 19.28                    & 0.06                         \\ \hline
+\textbf{CNN+GRU}            & GloVe (300d)              & 87.62\%           & 87.72\%           & 87.89\%              & 88.33\%            & 87.62\%         & 12.74                    & 0.03                         \\ \hline
+\textbf{LSTM}               & GloVe (300d)              & 89.17\%           & 89.25\%           & 89.51\%              & 89.51\%            & 89.17\%         & 41.73                    & 0.05                         \\ \hline
+\textbf{GRU}                & GloVe (300d)              & 92.15\%           & 92.14\%           & 92.35\%              & 92.13\%            & 92.15\%         & \textbf{2.33}                     & 0.05                         \\ \hline
+\textbf{BiGRU + Bahdanau}   & GloVe (300d)              & 92.17\%           & 92.21\%           & 92.35\%              & 92.40\%            & 92.17\%         & 10.56                    & 0.21                         \\ \hline
+\textbf{BiGRU + Bahdanau}   & FastText (300d)           & 92.80\%           & 92.89\%           & 93.04\%              & 93.14\%            & 92.80\%         & 9.96                     & 0.22                         \\ \hline
+\textbf{BiGRU + Bahdanau}   & PubMedBERT                & 91.89\%           & \textbf{91.9\%}  & 92.16\%    & 91.96\% & 91.89\% & 33.33                    & 0.50                         \\ \hline
+\textbf{BiGRU + Bahdanau}   & BioBERT                   & \textbf{92.23\%}  & \textbf{92.33\%}          & \textbf{92.01\%}             & \textbf{92.13\%}            & \textbf{92.21\%}         & 35.66                    & 0.49                         \\ \hline
+\end{tabular}
+}
+\caption{Performance Metrics of Multi-Class Classification Models on the Test Set: Accuracy, F1 Score, Balanced Accuracy, Precision, Recall, Training and Inference Times.}
+\label{tab:model_performance_multiclass}
+\end{table}
+
+
+\begin{table}[H]
+\centering
+\scriptsize
+\caption{Performance of LSTM and GRU models with different resampling and weighting strategies (binary classification)}
+\begin{tabular}{|l|l|c|c|c|c|}
+\hline
+\textbf{Training Strategy} & \textbf{Model} & \textbf{Accuracy} & \textbf{F1-score} & \textbf{Balanced Acc} & \textbf{Recall} \\
+\hline
+No resampling & LSTM & 90.70\% & 87.23\% & 90.46\% & 89.64\% \\
+No resampling & GRU  & 91.74\% & 88.76\% & 91.81\% & 92.02\% \\
+\hline
+SMOTE & LSTM & 89.66\% & 86.40\% & 90.35\% & 92.72\% \\
+SMOTE & GRU  & \textbf{92.04\%} & \textbf{89.09\%} & \textbf{91.96\%} & 91.67\% \\
+\hline
+Borderline-SMOTE & LSTM & 90.45\% & 87.25\% & 90.84\% & 92.16\% \\
+Borderline-SMOTE & GRU  & 90.92\% & 87.87\% & 91.35\% & 92.79\% \\
+\hline
+Class Weights & LSTM & 90.13\% & 87.32\% & 91.43\% & \textbf{95.87\%} \\
+Class Weights & GRU  & 91.97\% & 88.83\% & 91.55\% & 90.13\% \\
+\hline
+\end{tabular}
+\vspace{0.5em}
+\caption*{\textit{Note: All models trained with batch size = 16 and use GloVe (300d) embeddings.}}
+\label{tab:performance_resampling_multi}
+\end{table}
+
+
+
+
+
 
 
 \section{Figures additionnelles}
@@ -1267,10 +1757,108 @@ BiGRU + Bahdanau  & BioBERT (768d) & 256 & 0.6 & RMSprop & 1e-4 & 110,018,305 \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.35\textwidth]{contextual_pipeline.png}
-\caption{Pipeline de préparation des données pour les modèles utilisant des embeddings contextuels}
-\label{fig:contextual_pipeline}
+\includegraphics[width=0.6\textwidth]{model_performances_binary.png}
+\caption{Performances des modèles (classification binaire)}
+\label{fig:model_performances_binary}
 \end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{multi_class_performances.png}
+\caption{Performances des modèles (classification multiclasses)}
+\label{fig:multi_class_performance}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{resampling.png}
+\caption{Performances des modèles GRU et LSTM après application des techniques de rééchantillonnage (SMOTE, Borderline-SMOTE) et de pondération des classes dans la fonction de perte (classification binaire).}
+\label{fig:resampling}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{kshot_binary.png}
+\caption{k-shot (Binary Classification)}
+\label{fig:kshot_binary}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{kshot_multi.png}
+\caption{k-shot (Multi-Class Classification)}
+\label{fig:kshot_multi}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{resampling_multi.png}
+\caption{Performances des modèles GRU et LSTM après application des techniques de rééchantillonnage (SMOTE, Borderline-SMOTE) et de pondération des classes dans la fonction de perte (Classification Multiclasses).}
+\label{fig:resampling_multi}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{kshot_binary_biGRU.png}
+\caption{Évolution de la perte, du F1-score et de la Balanced Accuracy pour le modèle BiGRU + Bahdanau + GloVe selon la valeur de $k$ (classification binaire).}
+\label{fig:kshot_binary_bi_Gru}
+\end{figure}
+
+\begin{center}
+\begin{minipage}[t]{\textwidth}
+\centering
+\includegraphics[width=\linewidth]{auc_multi_class.png}
+\small\textbf{Figure:} AUC Curve for Multi-Class Classification
+\label{fig:auc_multi}
+\end{minipage}
+\end{center}
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{kshot_multi_biGRU.png}
+\caption{Évolution de la perte, du F1-score et de la Balanced Accuracy pour le modèle BiGRU + Bahdanau + GloVe selon la valeur de $k$ (classification multiclasses).}
+\label{fig:kshot_multi_bi_Gru}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{cm_binary.png}
+\caption{Confusion matrices for Binary Classification}
+\label{fig:cm_binary}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{cm_multi.png}
+\caption{Confusion matrices for Multi-Class Classification}
+\label{fig:cm_multi}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{binary_misclass_results.png}
+\caption{Misclassifications for Binary Classification}
+\label{fig:binary_misclass}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{multi_misclassifications.png}
+\caption{Misclassifications for Multi-Class Classification}
+\label{fig:multi_misclassifications}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1479,10 +2067,9 @@ arXiv preprint, 2015.
 \bibitem{gu2020domain}
 Y. Gu, R. Tinn, H. Cheng, M. Lucas, N. Usuyama, X. Liu, T. Naumann, J. Gao, H. Poon, "Domain-specific language model pretraining for biomedical natural language processing," ACM Transactions on Computing for Healthcare (HEALTH), vol. 3, no. 1, pp. 1–23, 2020. \url{https://arxiv.org/abs/2007.15779}
 
-\begin{thebibliography}{99}
-    \bibitem{geurts2006} 
-    Geurts, P., \& Wehenkel, L. (2006). \textit{Learning with Decision Trees and Random Forests}. Institut Montefiore, University of Liège, Belgium.
-\end{thebibliography}
+\bibitem{geurts2006} 
+Geurts, P., \& Wehenkel, L. (2006). \textit{Learning with Decision Trees and Random Forests}. Institut Montefiore, University of Liège, Belgium.
+
 
 
 
