@@ -18,7 +18,7 @@ This project explores the application of deep learning techniques for classifyin
 
 Binary Classification Task
 
-- _Labels_: Malaria vs. Non-Malaria (Alzheimer’s & Dengue)
+- _Labels_: Malaria vs. Non-Malaria (articles related to other diseases, including parasitic diseases and general medical conditions, explicitly excluding malaria-related content)
 - _Size_: 29,997 abstracts (imbalanced)
 - _Source_: PubMed abstracts from 1950–2024
 - _Objective_: Evaluate model behavior in a binary scenario with class imbalance
