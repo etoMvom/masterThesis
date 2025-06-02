@@ -49,24 +49,23 @@ class BahdanauAttention(nn.Module):
 
 class PubMedBERT_GRU_Attention(nn.Module):
     """
-    Model combining PubMedBERT embeddings, GRU layers, and Bahdanau Attention mechanism for multi-class classification.
+    Model combining PubMedBERT embeddings, GRU layers, and Bahdanau Attention mechanism for binary classification.
 
     Args:
         bert_dim (int): The dimension of the PubMedBERT embeddings (usually 768).
         hidden_dim (int): The hidden dimension of the GRU layer.
-        num_classes (int): The number of output classes for classification (default is 9 for multi-class classification).
+        num_classes (int): The number of classes for classification (usually 2 for binary classification).
         num_layers (int): The number of layers in the GRU (default is 1).
         dropout_prob (float): Dropout probability for regularization.
 
     Attributes:
         gru (nn.GRU): A bidirectional GRU layer.
         attention (BahdanauAttention): The Bahdanau attention mechanism.
-        fc (nn.Linear): The fully connected layer to produce the output predictions.
+        fc (nn.Linear): The fully connected layer to produce the binary output.
         dropout (nn.Dropout): Dropout layer for regularization.
     """
-    def __init__(self, bert_dim, hidden_dim, num_classes=9, num_layers=1, dropout_prob=0.6):
+    def __init__(self, bert_dim, hidden_dim, num_layers=1, dropout_prob=0.6, num_classes = 1):
         super(PubMedBERT_GRU_Attention, self).__init__()
-
         self.gru = nn.GRU(
             input_size=bert_dim,
             hidden_size=hidden_dim,
@@ -74,27 +73,16 @@ class PubMedBERT_GRU_Attention(nn.Module):
             batch_first=True,
             bidirectional=True
         )
-
         self.attention = BahdanauAttention(hidden_dim)
         self.fc = nn.Linear(hidden_dim * 2, num_classes)
         self.dropout = nn.Dropout(dropout_prob)
 
     def forward(self, input_ids, attention_mask):
-        """
-        Forward pass of the model.
-
-        Args:
-            input_ids (Tensor): The tokenized input sequence IDs.
-            attention_mask (Tensor): The attention mask to differentiate padding from real tokens.
-
-        Returns:
-            Tensor: The output logits for classification.
-        """
         with torch.no_grad():
             bert_outputs = pubmedbert(input_ids=input_ids, attention_mask=attention_mask)
         bert_embeds = bert_outputs.last_hidden_state
         gru_out, _ = self.gru(bert_embeds)
         context = self.attention(gru_out)
         x = self.dropout(context)
-        output = self.fc(x)  # Logits for multi-class classification
-        return output
+        output = self.fc(x)
+        return output  # logits

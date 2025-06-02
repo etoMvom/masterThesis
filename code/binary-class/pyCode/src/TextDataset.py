@@ -18,7 +18,7 @@ from nltk.corpus import stopwords
 
 Entrez.email = "etowilfried1@gmail.com"
 
-def search_pubmed(query, retmax=5000):
+def search_pubmed(query, retmax=15000):
     """Search PubMed and return article IDs."""
     handle = Entrez.esearch(db="pubmed", term=query, retmax=retmax)
     record = Entrez.read(handle)

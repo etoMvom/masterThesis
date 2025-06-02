@@ -50,21 +50,21 @@ def train_model(model, dataloader, optimizer, criterion, device):
     total_correct = 0
     total_samples = 0
 
-    for batch in tqdm(dataloader, desc="Training"):
+    for batch in dataloader:
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
-        labels = batch['labels'].to(device)
+        labels = batch['labels'].float().to(device).unsqueeze(1)
 
         optimizer.zero_grad()
         logits = model(input_ids, attention_mask)
-
         loss = criterion(logits, labels)
         loss.backward()
         optimizer.step()
 
         total_loss += loss.item()
 
-        preds = torch.argmax(logits, dim=1).cpu().detach().numpy()
+        preds = torch.sigmoid(logits).detach().cpu().numpy()
+        preds = (preds > 0.5).astype(int)
         total_correct += np.sum(preds == labels.cpu().numpy())
         total_samples += labels.size(0)
 
@@ -78,7 +78,7 @@ def test_model(model, test_loader, criterion, device):
     Args:
         model: The model to evaluate.
         test_loader: DataLoader for the test dataset.
-        criterion: Loss function (CrossEntropyLoss).
+        criterion: Loss function (BCEWithLogitsLoss).
         device: CPU/GPU device.
     Returns:
         Average test loss, accuracy, F1-score, balanced accuracy, recall, and precision.
@@ -90,32 +90,30 @@ def test_model(model, test_loader, criterion, device):
     all_preds = []
 
     with torch.no_grad():
-        for batch in tqdm(test_loader, desc="Testing"):
+        for batch in test_loader:
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
-            target_tensor = batch['labels'].to(device)
+            target_tensor = batch['labels'].float().to(device).unsqueeze(1)
 
             output = model(input_ids, attention_mask)
             loss = criterion(output, target_tensor)
             total_loss += loss.item()
 
-            batch_accuracy = accuracy_score(target_tensor.cpu(), torch.argmax(output, dim=1).cpu())
-            total_accuracy += batch_accuracy * len(target_tensor)
+            preds = torch.sigmoid(output).cpu().numpy()
+            preds_bin = (preds > 0.5).astype(int)
+            total_accuracy += accuracy_score(target_tensor.cpu(), preds_bin) * len(target_tensor)
 
-            preds = torch.argmax(output, dim=1).cpu().numpy()
-            labels = target_tensor.cpu().numpy()
-
-            all_preds.extend(preds)
-            all_labels.extend(labels)
+            all_preds.extend(preds_bin)
+            all_labels.extend(target_tensor.cpu().numpy())
 
     avg_loss = total_loss / len(test_loader)
     avg_accuracy = total_accuracy / len(test_loader.dataset)
     all_preds = np.array(all_preds)
     all_labels = np.array(all_labels)
 
-    f1 = f1_score(all_labels, all_preds, average="weighted", zero_division=0)
+    f1 = f1_score(all_labels, all_preds, zero_division=0)
     balanced_acc = balanced_accuracy_score(all_labels, all_preds)
-    precision = precision_score(all_labels, all_preds, average="weighted", zero_division=0)
-    recall = recall_score(all_labels, all_preds, average="weighted", zero_division=0)
+    precision = precision_score(all_labels, all_preds, zero_division=0)
+    recall = recall_score(all_labels, all_preds, zero_division=0)
 
     return avg_loss, avg_accuracy, f1, balanced_acc, recall, precision
