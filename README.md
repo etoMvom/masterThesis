@@ -12,7 +12,7 @@ This project explores the application of deep learning techniques for classifyin
 - _Model Effectiveness & Efficiency_: Evaluating the performance of different neural architectures (LSTM, GRU, GRU + Bahdanau attention) in terms of training speed, inference time, parameter complexity, and predictive performance.
 - _Impact of Embedding Representations_: Assessing the impact of various embedding strategies (raw input, GloVe, Fasttext, BioBert, PubMedBERT) on model performance.
 - _Addressing Class Imbalance_: Investigating the effectiveness of techniques to address class imbalance.
-- _Generalizability & Few-Shot Potential_: Generalizability & Few-Shot Learning: Applying few-shot learning to top-performing models to evaluate their ability to generalize to underrepresented disease categories and improve rare disease classification.
+- _Generalizability & Few-Shot Potential_: Generalizability & Few-Shot Learning:To what extent do the best models generalise to under-represented disease categories, and do few-shot learning methods improve classification in resource-poor settings?
 
 ## 📚 **Dataset**
 
